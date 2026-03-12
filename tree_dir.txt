@@ -1,0 +1,43 @@
+lib/
+├── core/                           # Jantung aplikasi (Logic yang dipakai di mana-mana)
+│   ├── auth/                       # Centralized Authentication
+│   │   ├── auth_provider.dart      # Riverpod Notifier untuk handle Login/Logout
+│   │   └── auth_repository.dart    # Komunikasi ke Laravel (Sanctum/Passport)
+│   ├── network/                    # Networking Layer
+│   │   ├── dio_client.dart         # Config Dio + Interceptor (Bearer Token)
+│   │   └── api_endpoints.dart      # Daftar URL (BASE_URL/api/v1/...)
+│   ├── theme/                      # Styling (Warna & Font Perusahaan)
+│   └── utils/                      # Helper (Format tanggal, validasi, dll)
+│
+├── features/                       # Modul Aplikasi (Sub-Apps)
+│   ├── shell/                      # Landing Page (Menu utama pemilih aplikasi)
+│   │   ├── providers/              # Logic filter menu berdasarkan role user
+│   │   ├── screens/                # UI Dashboard (Ikon kotak-kotak)
+│   │   └── widgets/                # Widget khusus dashboard
+│   ├── attendance/                 # Sub-App: Presensi (Offline Sync siap di sini)
+│   │   ├── providers/              # State managament khusus presensi
+│   │   ├── repository/             # API khusus presensi
+│   │   └── screens/                # UI Check-in, History, dll
+│   └── inventory/                  # Sub-App: Inventaris
+│       ├── providers/
+│       ├── repository/
+│       └── screens/
+│
+├── models/                         # Data Layer (Grouping by Feature)
+│   ├── auth/
+│   │   └── user_model.dart         # Profile, Token, & Permissions
+│   ├── attendance/
+│   │   ├── check_in_model.dart
+│   │   └── history_model.dart
+│   ├── inventory/
+│   │   └── item_model.dart
+│   └── shared/
+│       └── base_response_model.dart # Wrapper API (status, message, data)
+│
+├── shared_widgets/                 # UI Komponen yang bisa dipakai semua modul
+│   ├── custom_button.dart
+│   ├── custom_input.dart
+│   └── app_logo.dart
+│
+├── app.dart                        # Konfigurasi MaterialApp + GoRouter
+└── main.dart                       # Entry point (ProviderScope & Init)
