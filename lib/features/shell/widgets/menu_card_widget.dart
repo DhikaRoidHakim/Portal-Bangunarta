@@ -6,6 +6,7 @@ Widget buildMenuCard({
   required String title,
   required String iconPath,
   required Color color,
+  VoidCallback? onTap,
 }) {
   return Container(
     decoration: BoxDecoration(
@@ -25,9 +26,7 @@ Widget buildMenuCard({
         borderRadius: BorderRadius.circular(24),
         splashColor: color.withValues(alpha: .1),
         highlightColor: color.withValues(alpha: .05),
-        onTap: () {
-          // TODO: Route ke respective Feature
-        },
+        onTap: onTap,
         child: Stack(
           children: [
             // Motif Latar (Hiasan Lingkaran) di pojok kanan bawah

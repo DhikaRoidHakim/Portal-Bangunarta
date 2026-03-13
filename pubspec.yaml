@@ -43,6 +43,7 @@ dependencies:
   overlay_support: ^2.1.0
   package_info_plus: ^9.0.0
   flutter_svg: ^2.0.10
+  avatar_plus: ^0.0.5
 
 dev_dependencies:
   flutter_test:

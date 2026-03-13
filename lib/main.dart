@@ -1,3 +1,7 @@
+import 'package:bangunarta_portal/features/samba/screens/detail_rekening.dart'
+    show DetailRekeningScreen;
+import 'package:bangunarta_portal/features/samba/screens/detail_transaksi.dart';
+import 'package:bangunarta_portal/features/samba/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -5,6 +9,9 @@ import 'package:overlay_support/overlay_support.dart';
 import 'package:bangunarta_portal/features/auth/screen/login_screen.dart';
 import 'package:bangunarta_portal/features/shell/screens/splash_screen.dart';
 import 'package:bangunarta_portal/features/shell/screens/dashboard.dart';
+
+import 'package:bangunarta_portal/features/simontok/screens/home_screen.dart';
+import 'package:bangunarta_portal/features/samba/screens/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -24,9 +31,19 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           initialRoute: '/',
           routes: {
+            // Portal Routes
             '/': (context) => const SplashScreen(),
             '/login': (context) => const LoginPage(),
             '/dashboard': (context) => const DashboardPage(),
+
+            // Simontok Routes
+            '/simontok': (context) => const SimontokHomeScreen(),
+
+            // Samba Routes
+            '/samba': (context) => const SambaHomeScreen(),
+            '/samba/rekening': (context) => const DetailRekeningScreen(),
+            '/samba/transaksi': (context) => const DetailTransaksiScreen(),
+            '/samba/profile': (context) => const ProfileScreen(),
           },
         ),
       ),

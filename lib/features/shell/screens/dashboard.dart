@@ -86,24 +86,41 @@ class _DashboardPageState extends State<DashboardPage> {
               childAspectRatio: 1.25,
               children: [
                 buildMenuCard(
-                  title: 'Sipebri',
+                  title: 'Samba',
                   iconPath: 'assets/icons/cash-banknote-plus.svg',
                   color: const Color(0xFF4FA8D2),
+                  onTap: () => Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/samba',
+                    (route) => false,
+                  ),
                 ),
                 buildMenuCard(
                   title: 'Simontok',
                   iconPath: 'assets/icons/device-desktop-analytics.svg',
                   color: const Color(0xFFE28C4A),
+                  // onTap: () => Navigator.pushNamed(context, '/simontok'),
+                  onTap: () => Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/simontok',
+                    (route) => false,
+                  ),
                 ),
                 buildMenuCard(
                   title: 'Helpdesk',
                   iconPath: 'assets/icons/messages.svg',
                   color: const Color(0xFF4CAF50),
+                  onTap: () => Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/helpdesk',
+                    (route) => false,
+                  ),
                 ),
                 buildMenuCard(
                   title: 'Presensi',
                   iconPath: 'assets/icons/fingerprint.svg',
                   color: const Color(0xFF9C27B0),
+                  onTap: () {},
                 ),
               ],
             ),
