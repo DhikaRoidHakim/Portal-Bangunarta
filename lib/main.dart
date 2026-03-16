@@ -12,6 +12,7 @@ import 'package:bangunarta_portal/features/shell/screens/dashboard.dart';
 
 import 'package:bangunarta_portal/features/simontok/screens/home_screen.dart';
 import 'package:bangunarta_portal/features/samba/screens/home_screen.dart';
+import 'package:bangunarta_portal/features/helpdesk/screens/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -38,6 +39,9 @@ class MyApp extends StatelessWidget {
 
             // Simontok Routes
             '/simontok': (context) => const SimontokHomeScreen(),
+
+            // Helpdesk Routes
+            '/helpdesk': (context) => const HelpdeskHomeScreen(),
 
             // Samba Routes
             '/samba': (context) => const SambaHomeScreen(),
