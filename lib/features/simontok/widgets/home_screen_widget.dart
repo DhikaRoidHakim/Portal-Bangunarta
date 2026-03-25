@@ -32,6 +32,7 @@ Widget logout(BuildContext context) {
 // Bottom Navigation
 Widget buildBottomNav(int currentIndex, Function(int) onTap) {
   return BottomNavigationBar(
+    currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
     backgroundColor: AppTheme.backgroundLight,
     elevation: 0,

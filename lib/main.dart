@@ -2,6 +2,7 @@ import 'package:bangunarta_portal/features/samba/screens/detail_rekening.dart'
     show DetailRekeningScreen;
 import 'package:bangunarta_portal/features/samba/screens/detail_transaksi.dart';
 import 'package:bangunarta_portal/features/samba/screens/profile_screen.dart';
+import 'package:bangunarta_portal/features/simontok/screens/detail_kredit_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -39,6 +40,7 @@ class MyApp extends StatelessWidget {
 
             // Simontok Routes
             '/simontok': (context) => const SimontokHomeScreen(),
+            '/simontok/kredit': (context) => const DetailKreditScreen(),
 
             // Helpdesk Routes
             '/helpdesk': (context) => const HelpdeskHomeScreen(),
