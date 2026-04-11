@@ -63,6 +63,11 @@ class FloatingNavWidget extends StatelessWidget {
                   label: 'Aktivitas',
                 ),
                 BottomNavigationBarItem(
+                  icon: Icon(Icons.newspaper_outlined),
+                  activeIcon: Icon(Icons.newspaper_rounded),
+                  label: 'Berita',
+                ),
+                BottomNavigationBarItem(
                   icon: Icon(Icons.person_outline_rounded),
                   activeIcon: Icon(Icons.person_rounded),
                   label: 'Profil',

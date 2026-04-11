@@ -1,6 +1,6 @@
+import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:bangunarta_portal/features/shell/screens/dashboard.dart';
 import 'package:flutter/material.dart';
-import '../../../core/theme/theme.dart';
-import '../../shell/screens/dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -55,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
 
               // Judul Utama
               const Text(
-                'Super App Bangunarta',
+                'Bangunarta One',
                 style: AppTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
@@ -204,7 +204,7 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 16),
 
               // Footer Version & Privacy
               Row(
