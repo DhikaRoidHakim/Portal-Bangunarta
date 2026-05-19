@@ -1,10 +1,11 @@
 import 'dart:ui';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/core/utils/dashboard_util.dart';
 import 'package:bangunarta_portal/features/shell/widgets/floatingnav_widget.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -20,10 +21,12 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     // Mengatur status bar style untuk header yang gelap
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
   }
 
   @override
@@ -54,39 +57,56 @@ class _DashboardPageState extends State<DashboardPage> {
                     child: _buildSearchBar(),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Floating User Summary Card
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: _buildSummaryCard(),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  
+                  // Padding(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  //   child: _buildSummaryCard(),
+                  // ),
+                  // const SizedBox(height: 32),
+
                   // Layanan Kami
-                  _buildSectionTitle('Layanan Kami', 'Lihat Semua', () {}),
+                  _buildSectionTitle(
+                    'Layanan Kami',
+                    'Lihat Semua',
+                    AppTheme.textWhite,
+                    AppTheme.textWhite,
+                    () {},
+                  ),
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: _buildServicesGrid(),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Informasi Terkini
-                  _buildSectionTitle('Info Terkini', '', null),
+                  _buildSectionTitle(
+                    'Informasi Terkini',
+                    '',
+                    AppTheme.primaryColor,
+                    AppTheme.textWhite,
+                    null,
+                  ),
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: _buildNewsBanner(),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Aktivitas Terakhir
-                  _buildSectionTitle('Aktivitas Terakhir', 'Lihat Semua', () {}),
-                  const SizedBox(height: 16),
-                  _buildRecentActivities(),
+                  // _buildSectionTitle(
+                  //   'Aktivitas Terakhir',
+                  //   'Lihat Semua',
+                  //   Colors.white,
+                  //   AppTheme.primaryColor,
+                  //   () {},
+                  // ),
+                  // const SizedBox(height: 16),
+                  // _buildRecentActivities(),
                 ],
               ),
             ),
@@ -182,7 +202,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 child: const CircleAvatar(
                   radius: 26,
-                  backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'),
+                  backgroundImage: NetworkImage(
+                    'https://i.pravatar.cc/150?img=11',
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -248,14 +270,16 @@ class _DashboardPageState extends State<DashboardPage> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, color: Colors.white.withValues(alpha: 0.8), size: 24),
+          Icon(
+            Icons.search_rounded,
+            color: Colors.white.withValues(alpha: 0.8),
+            size: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
@@ -279,7 +303,11 @@ class _DashboardPageState extends State<DashboardPage> {
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(Icons.tune_rounded, color: Colors.white.withValues(alpha: 0.9), size: 18),
+            child: Icon(
+              Icons.tune_rounded,
+              color: Colors.white.withValues(alpha: 0.9),
+              size: 18,
+            ),
           ),
         ],
       ),
@@ -345,7 +373,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE6F4EA),
                   borderRadius: BorderRadius.circular(20),
@@ -367,11 +398,26 @@ class _DashboardPageState extends State<DashboardPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildSummaryStat('Tugas', '12', Icons.task_alt_rounded, Colors.orange),
+              _buildSummaryStat(
+                'Tugas',
+                '12',
+                Icons.task_alt_rounded,
+                Colors.orange,
+              ),
               Container(width: 1, height: 40, color: const Color(0xFFF1F5F9)),
-              _buildSummaryStat('Pesan', '3', Icons.mark_email_unread_rounded, Colors.blue),
+              _buildSummaryStat(
+                'Pesan',
+                '3',
+                Icons.mark_email_unread_rounded,
+                Colors.blue,
+              ),
               Container(width: 1, height: 40, color: const Color(0xFFF1F5F9)),
-              _buildSummaryStat('Cuti', '5 Hr', Icons.event_available_rounded, Colors.purple),
+              _buildSummaryStat(
+                'Cuti',
+                '5 Hr',
+                Icons.event_available_rounded,
+                Colors.purple,
+              ),
             ],
           ),
         ],
@@ -379,7 +425,12 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildSummaryStat(String label, String value, IconData icon, Color color) {
+  Widget _buildSummaryStat(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color.withValues(alpha: 0.8), size: 22),
@@ -405,7 +456,13 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildSectionTitle(String title, String actionText, VoidCallback? onAction) {
+  Widget _buildSectionTitle(
+    String title,
+    String actionText,
+    Color colortitle,
+    Color coloraction,
+    VoidCallback? onAction,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Row(
@@ -414,10 +471,10 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: AppTheme.textPrimary,
+              color: colortitle,
               letterSpacing: -0.3,
             ),
           ),
@@ -426,10 +483,10 @@ class _DashboardPageState extends State<DashboardPage> {
               onTap: onAction,
               child: Text(
                 actionText,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.primaryColor,
+                  color: coloraction,
                 ),
               ),
             ),
@@ -454,7 +511,11 @@ class _DashboardPageState extends State<DashboardPage> {
           iconPath: 'assets/icons/cash-banknote-plus.svg',
           color: const Color(0xFF4FA8D2),
           gradient: const [Color(0xFF4FA8D2), Color(0xFF3388CA)],
-          onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/samba', (route) => false),
+          onTap: () => Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/samba',
+            (route) => false,
+          ),
         ),
         _buildModernMenuCard(
           title: 'Simontok',
@@ -462,7 +523,11 @@ class _DashboardPageState extends State<DashboardPage> {
           iconPath: 'assets/icons/device-desktop-analytics.svg',
           color: const Color(0xFFE28C4A),
           gradient: const [Color(0xFFE28C4A), Color(0xFFD6732B)],
-          onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/simontok', (route) => false),
+          onTap: () => Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/simontok',
+            (route) => false,
+          ),
         ),
         _buildModernMenuCard(
           title: 'Helpdesk',
@@ -470,7 +535,11 @@ class _DashboardPageState extends State<DashboardPage> {
           iconPath: 'assets/icons/messages.svg',
           color: const Color(0xFF4CAF50),
           gradient: const [Color(0xFF4EE293), Color(0xFF30B16B)],
-          onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/helpdesk', (route) => false),
+          onTap: () => Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/helpdesk',
+            (route) => false,
+          ),
         ),
         _buildModernMenuCard(
           title: 'Presensi',
@@ -527,7 +596,10 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 16.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -555,7 +627,10 @@ class _DashboardPageState extends State<DashboardPage> {
                         iconPath,
                         width: 24,
                         height: 24,
-                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
+                        ),
                       ),
                     ),
                   ),
@@ -595,7 +670,9 @@ class _DashboardPageState extends State<DashboardPage> {
         color: const Color(0xFF1E293B), // Dark slate
         borderRadius: BorderRadius.circular(24),
         image: DecorationImage(
-          image: const NetworkImage('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=600&auto=format&fit=crop'),
+          image: const NetworkImage(
+            'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=600&auto=format&fit=crop',
+          ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
             const Color(0xFF1E293B).withValues(alpha: 0.8),
@@ -652,7 +729,11 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.arrow_forward_rounded, color: Colors.white.withValues(alpha: 0.7), size: 16),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white.withValues(alpha: 0.7),
+                size: 16,
+              ),
             ],
           ),
         ],
