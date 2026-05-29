@@ -8,6 +8,10 @@ import 'transaksi_screen.dart';
 // Widgets
 import 'package:bangunarta_portal/features/samba/widgets/home_screen_widget.dart';
 
+import 'package:bangunarta_portal/core/navigation/app_router.dart';
+
+import 'package:go_router/go_router.dart';
+
 class SambaHomeScreen extends StatefulWidget {
   const SambaHomeScreen({super.key});
 
@@ -62,6 +66,8 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
                   Navigator.pushNamed(context, '/samba/profile');
                 } else if (value == 'logout') {
                   _showLogoutDialog(context);
+                } else if (value == 'dashboard') {
+                  _showDashboardDialog(context);
                 }
               },
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -81,6 +87,28 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
                           color: AppTheme.textPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(height: 1),
+                PopupMenuItem<String>(
+                  value: 'dashboard',
+                  child: Row(
+                    children: const [
+                      Icon(
+                        Icons.dashboard_outlined,
+                        color: AppTheme.textPrimary,
+                        size: 20,
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'Dashboard',
+                        style: TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -224,11 +252,7 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
-                  (route) => false,
-                );
+                context.pushReplacement('/login');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
@@ -240,6 +264,62 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
               ),
               child: const Text(
                 'Keluar',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDashboardDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surfaceWhite,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Konfirmasi Dashboard',
+            style: TextStyle(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          content: const Text(
+            'Apakah Anda yakin ingin kembali ke dashboard?',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Batal',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                context.pushReplacement('/dashboard');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.secondaryColor,
+                foregroundColor: AppTheme.surfaceWhite,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Ya',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),

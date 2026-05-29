@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:go_router/go_router.dart';
+import 'package:bangunarta_portal/core/navigation/app_router.dart';
 
-// Widget
-
-// Logout (Sementara)
 //TODO: Implementasi Logout
 Widget logout(BuildContext context) {
   return AlertDialog(
@@ -17,11 +16,7 @@ Widget logout(BuildContext context) {
       TextButton(
         onPressed: () {
           // Implementasi logout
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/login',
-            (route) => false,
-          );
+          context.pushReplacement('/login');
         },
         child: const Text('Keluar'),
       ),

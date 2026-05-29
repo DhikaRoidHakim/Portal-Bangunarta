@@ -1,20 +1,23 @@
 import 'dart:ui';
 
+import 'package:bangunarta_portal/core/auth/auth_provider.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/core/utils/dashboard_util.dart';
 import 'package:bangunarta_portal/features/shell/widgets/floatingnav_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 
-class DashboardPage extends StatefulWidget {
+class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends ConsumerState<DashboardPage> {
   int _currentIndex = 0;
 
   @override
@@ -31,6 +34,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final name = user?.employee.namaLengkap?.trim();
+    final loggedInName = name == null || name.isEmpty ? 'User' : name;
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
       extendBody: true,
@@ -49,7 +57,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 10),
-                  _buildHeaderRow(),
+                  _buildHeaderRow(loggedInName),
                   const SizedBox(height: 24),
                   // Search Bar inside Header
                   Padding(
@@ -116,6 +124,16 @@ class _DashboardPageState extends State<DashboardPage> {
       bottomNavigationBar: FloatingNavWidget(
         currentIndex: _currentIndex,
         onTap: (index) {
+          if (index == 2) {
+            context.go('/news');
+            return;
+          }
+
+          if (index == 3) {
+            context.go('/profile');
+            return;
+          }
+
           setState(() {
             _currentIndex = index;
           });
@@ -123,6 +141,8 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+
+  // _loadLoggedInUser is no longer needed since name is reactively watched from authProvider
 
   Widget _buildBackgroundHeader() {
     return Positioned(
@@ -175,7 +195,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildHeaderRow() {
+  Widget _buildHeaderRow(String loggedInName) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Row(
@@ -220,9 +240,11 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Dhika Ganteng',
-                    style: TextStyle(
+                  Text(
+                    loggedInName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
@@ -253,7 +275,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     color: Colors.white,
                     size: 24,
                   ),
-                  onPressed: () {},
+                  onPressed: () => context.push('/notifications'),
                   padding: const EdgeInsets.all(12),
                   constraints: const BoxConstraints(),
                 ),
@@ -314,148 +336,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildSummaryCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F0FE),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.fingerprint_rounded,
-                      color: AppTheme.primaryColor,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ringkasan Kehadiran',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textSecondary.withValues(alpha: 0.8),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Sudah Absen Masuk',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE6F4EA),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  '08:15 AM',
-                  style: TextStyle(
-                    color: Color(0xFF1E8E3E),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildSummaryStat(
-                'Tugas',
-                '12',
-                Icons.task_alt_rounded,
-                Colors.orange,
-              ),
-              Container(width: 1, height: 40, color: const Color(0xFFF1F5F9)),
-              _buildSummaryStat(
-                'Pesan',
-                '3',
-                Icons.mark_email_unread_rounded,
-                Colors.blue,
-              ),
-              Container(width: 1, height: 40, color: const Color(0xFFF1F5F9)),
-              _buildSummaryStat(
-                'Cuti',
-                '5 Hr',
-                Icons.event_available_rounded,
-                Colors.purple,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryStat(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Column(
-      children: [
-        Icon(icon, color: color.withValues(alpha: 0.8), size: 22),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSectionTitle(
     String title,
     String actionText,
@@ -511,11 +391,7 @@ class _DashboardPageState extends State<DashboardPage> {
           iconPath: 'assets/icons/cash-banknote-plus.svg',
           color: const Color(0xFF4FA8D2),
           gradient: const [Color(0xFF4FA8D2), Color(0xFF3388CA)],
-          onTap: () => Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/samba',
-            (route) => false,
-          ),
+          onTap: () => context.go('/samba'),
         ),
         _buildModernMenuCard(
           title: 'Simontok',
@@ -523,11 +399,7 @@ class _DashboardPageState extends State<DashboardPage> {
           iconPath: 'assets/icons/device-desktop-analytics.svg',
           color: const Color(0xFFE28C4A),
           gradient: const [Color(0xFFE28C4A), Color(0xFFD6732B)],
-          onTap: () => Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/simontok',
-            (route) => false,
-          ),
+          onTap: () => context.go('/simontok'),
         ),
         _buildModernMenuCard(
           title: 'Helpdesk',
@@ -535,11 +407,7 @@ class _DashboardPageState extends State<DashboardPage> {
           iconPath: 'assets/icons/messages.svg',
           color: const Color(0xFF4CAF50),
           gradient: const [Color(0xFF4EE293), Color(0xFF30B16B)],
-          onTap: () => Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/helpdesk',
-            (route) => false,
-          ),
+          onTap: () => context.go('/helpdesk'),
         ),
         _buildModernMenuCard(
           title: 'Presensi',
@@ -735,114 +603,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 size: 16,
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentActivities() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
-        children: [
-          _buildActivityItem(
-            'Pengajuan Cuti Disetujui',
-            'Cuti Tahunan (2 Hari)',
-            '2 Jam yang lalu',
-            Icons.event_available_rounded,
-            Colors.green,
-            const Color(0xFFE6F4EA),
-          ),
-          const SizedBox(height: 12),
-          _buildActivityItem(
-            'Tugas Baru: Update Server',
-            'Helpdesk IT',
-            'Kemarin',
-            Icons.task_alt_rounded,
-            Colors.orange,
-            const Color(0xFFFFF3E0),
-          ),
-          const SizedBox(height: 12),
-          _buildActivityItem(
-            'Gaji Telah Dikirim',
-            'Payroll Bulan Ini',
-            '2 Hari yang lalu',
-            Icons.monetization_on_rounded,
-            Colors.blue,
-            const Color(0xFFE8F0FE),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActivityItem(
-    String title,
-    String subtitle,
-    String time,
-    IconData icon,
-    Color iconColor,
-    Color bgColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.inputBorder.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: iconColor, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            time,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textSecondary.withValues(alpha: 0.6),
-            ),
           ),
         ],
       ),
