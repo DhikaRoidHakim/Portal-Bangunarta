@@ -177,7 +177,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       backgroundColor: AppTheme.backgroundLight,
       extendBody: true,
       body: bodyWidget,
-      bottomNavigationBar: FloatingNavWidget(currentIndex: 3, onTap: _onNavTap),
+      bottomNavigationBar: FloatingNavWidget(currentIndex: 1, onTap: _onNavTap),
     );
   }
 

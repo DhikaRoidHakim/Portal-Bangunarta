@@ -98,7 +98,7 @@ class NewsPage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: FloatingNavWidget(
-        currentIndex: 2,
+        currentIndex: 0,
         onTap: (index) => _onNavTap(context, index),
       ),
     );
@@ -256,7 +256,7 @@ class NewsPage extends StatelessWidget {
       return;
     }
 
-    if (index == 3) {
+    if (index == 1) {
       context.go('/profile');
     }
   }
