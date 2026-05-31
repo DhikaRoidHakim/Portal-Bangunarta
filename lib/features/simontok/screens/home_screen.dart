@@ -1,4 +1,5 @@
 // Main
+import 'package:bangunarta_portal/features/simontok/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 
@@ -38,7 +39,7 @@ class _SimontokHomeScreenState extends State<SimontokHomeScreen> {
           const KelolaanPage(showBackButton: false),
           const TugasPage(showBackButton: false),
           const ProspekPage(showBackButton: false),
-          logout(context),
+          const SettingsPage(),
         ],
       ),
       bottomNavigationBar: buildBottomNav(_currentIndex, (index) {

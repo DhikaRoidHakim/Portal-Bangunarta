@@ -68,7 +68,12 @@ Widget buildBottomNav(int currentIndex, Function(int) onTap) {
         activeIcon: Icon(Icons.pie_chart),
         label: 'Prospek',
       ),
-      BottomNavigationBarItem(icon: Icon(Icons.logout), label: 'Keluar'),
+      // BottomNavigationBarItem(icon: Icon(Icons.logout), label: 'Keluar'),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.settings_outlined),
+        activeIcon: Icon(Icons.settings),
+        label: 'Settings',
+      ),
     ],
   );
 }

@@ -1,3 +1,4 @@
+import 'package:bangunarta_portal/features/samba/screens/open_account_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 
@@ -8,9 +9,8 @@ import 'transaksi_screen.dart';
 // Widgets
 import 'package:bangunarta_portal/features/samba/widgets/home_screen_widget.dart';
 
-import 'package:bangunarta_portal/core/navigation/app_router.dart';
-
 import 'package:go_router/go_router.dart';
+import 'package:bangunarta_portal/core/navigation/app_router.dart';
 
 class SambaHomeScreen extends StatefulWidget {
   const SambaHomeScreen({super.key});
@@ -160,6 +160,7 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
         children: [
           buildBerandaBody(),
           const RekeningScreen(),
+          const OpenAccountScreen(),
           const TransaksiScreen(),
         ],
       ),
@@ -205,6 +206,11 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
               icon: Icon(Icons.people_outline),
               activeIcon: Icon(Icons.people),
               label: 'Rekening',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              activeIcon: Icon(Icons.account_balance_wallet),
+              label: "Open Account",
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.receipt_long_outlined),

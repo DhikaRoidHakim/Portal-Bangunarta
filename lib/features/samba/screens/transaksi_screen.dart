@@ -123,19 +123,31 @@ class TransaksiScreen extends StatelessWidget {
                   height: 1,
                   thickness: 1,
                 ),
-                _buildTransactionItem(context, 'Setoran Tab An. NYAI ROKAYAH via SA...', '124,000'),
+                _buildTransactionItem(
+                  context,
+                  'Setoran Tab An. NYAI ROKAYAH via SA...',
+                  '124,000',
+                ),
                 const Divider(
                   color: AppTheme.inputBorder,
                   height: 1,
                   thickness: 1,
                 ),
-                _buildTransactionItem(context, 'Setoran Tab An. TUNI WIDIAH via SAMBA', '59,000'),
+                _buildTransactionItem(
+                  context,
+                  'Setoran Tab An. TUNI WIDIAH via SAMBA',
+                  '59,000',
+                ),
                 const Divider(
                   color: AppTheme.inputBorder,
                   height: 1,
                   thickness: 1,
                 ),
-                _buildTransactionItem(context, 'Setoran Tab An. KASMINI via SAMBA', '30,000'),
+                _buildTransactionItem(
+                  context,
+                  'Setoran Tab An. KASMINI via SAMBA',
+                  '30,000',
+                ),
                 const Divider(
                   color: AppTheme.inputBorder,
                   height: 1,
@@ -156,60 +168,67 @@ class TransaksiScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionItem(BuildContext context, String description, String amount, {bool isLast = false}) {
+  Widget _buildTransactionItem(
+    BuildContext context,
+    String description,
+    String amount, {
+    bool isLast = false,
+  }) {
     return InkWell(
       onTap: () {
         Navigator.pushNamed(context, '/samba/transaksi');
       },
       child: Container(
-        color: const Color(0xFFFEF7E9), // Light cream/yellowish background match from image
+        color: const Color(
+          0xFFFEF7E9,
+        ), // Light cream/yellowish background match from image
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
           child: Row(
             children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceWhite,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.inputBorder),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.receipt_long_outlined,
-                  color: AppTheme.textSecondary,
-                  size: 24,
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceWhite,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.inputBorder),
                 ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                child: const Center(
+                  child: Icon(
+                    Icons.receipt_long_outlined,
                     color: AppTheme.textSecondary,
-                    height: 1.4,
+                    size: 24,
                   ),
-                  children: [
-                    TextSpan(text: '$description\n'),
-                    const TextSpan(text: 'sebesar '),
-                    TextSpan(
-                      text: amount,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textSecondary, // Match color but bold
-                      ),
-                    ),
-                  ],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textSecondary,
+                      height: 1.4,
+                    ),
+                    children: [
+                      TextSpan(text: '$description\n'),
+                      const TextSpan(text: 'sebesar '),
+                      TextSpan(
+                        text: amount,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textSecondary, // Match color but bold
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

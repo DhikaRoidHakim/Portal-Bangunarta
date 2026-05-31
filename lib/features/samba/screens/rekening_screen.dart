@@ -123,7 +123,11 @@ class RekeningScreen extends StatelessWidget {
                   height: 1,
                   thickness: 1,
                 ),
-                _buildRekeningItem(context, 'A YOMA AMANDA PUTRI', '01.101.015905'),
+                _buildRekeningItem(
+                  context,
+                  'A YOMA AMANDA PUTRI',
+                  '01.101.015905',
+                ),
                 const Divider(
                   color: AppTheme.inputBorder,
                   height: 1,
@@ -180,7 +184,12 @@ class RekeningScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRekeningItem(BuildContext context, String name, String number, {bool isLast = false}) {
+  Widget _buildRekeningItem(
+    BuildContext context,
+    String name,
+    String number, {
+    bool isLast = false,
+  }) {
     return InkWell(
       onTap: () {
         Navigator.pushNamed(context, '/samba/rekening');
@@ -188,51 +197,51 @@ class RekeningScreen extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
         child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceWhite,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.inputBorder),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.person_outline,
-                color: AppTheme.textSecondary,
-                size: 24,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceWhite,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.inputBorder),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.person_outline,
+                  color: AppTheme.textSecondary,
+                  size: 24,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
-                    letterSpacing: 0.1,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                      letterSpacing: 0.1,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  number,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
+                  const SizedBox(height: 4),
+                  Text(
+                    number,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
