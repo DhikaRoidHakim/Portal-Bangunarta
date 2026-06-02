@@ -58,23 +58,23 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       gradient: const [Color(0xFFE28C4A), Color(0xFFD6732B)],
       onTap: () => context.go('/simontok'),
     ),
-    _ServiceItem(
-      title: 'Helpdesk',
-      subtitle: 'Pusat Bantuan',
-      iconPath: 'assets/icons/messages.svg',
-      color: const Color(0xFF4CAF50),
-      gradient: const [Color(0xFF4EE293), Color(0xFF30B16B)],
-      onTap: () => context.go('/helpdesk'),
-    ),
-    _ServiceItem(
-      title: 'Presensi',
-      subtitle: 'Kehadiran Karyawan',
-      iconPath: 'assets/icons/fingerprint.svg',
-      color: const Color(0xFF9C27B0),
-      gradient: const [Color(0xFFA648E8), Color(0xFF7521B1)],
-      onTap: () {},
-      disabled: true,
-    ),
+    // _ServiceItem(
+    //   title: 'Helpdesk',
+    //   subtitle: 'Pusat Bantuan',
+    //   iconPath: 'assets/icons/messages.svg',
+    //   color: const Color(0xFF4CAF50),
+    //   gradient: const [Color(0xFF4EE293), Color(0xFF30B16B)],
+    //   onTap: () => context.go('/helpdesk'),
+    // ),
+    // _ServiceItem(
+    //   title: 'Presensi',
+    //   subtitle: 'Kehadiran Karyawan',
+    //   iconPath: 'assets/icons/fingerprint.svg',
+    //   color: const Color(0xFF9C27B0),
+    //   gradient: const [Color(0xFFA648E8), Color(0xFF7521B1)],
+    //   onTap: () {},
+    //   disabled: true,
+    // ),
   ];
 
   @override

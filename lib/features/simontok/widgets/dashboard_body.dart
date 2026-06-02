@@ -1,84 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
-import 'package:go_router/go_router.dart';
-import 'package:bangunarta_portal/core/navigation/app_router.dart';
 
-//TODO: Implementasi Logout
-Widget logout(BuildContext context) {
-  return AlertDialog(
-    title: const Text('Keluar'),
-    content: const Text('Apakah Anda yakin ingin keluar?'),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Batal'),
-      ),
-      TextButton(
-        onPressed: () {
-          // Implementasi logout
-          context.pushReplacement('/login');
-        },
-        child: const Text('Keluar'),
-      ),
-    ],
-  );
-}
-
-// Bottom Navigation
-Widget buildBottomNav(int currentIndex, Function(int) onTap) {
-  return BottomNavigationBar(
-    currentIndex: currentIndex,
-    type: BottomNavigationBarType.fixed,
-    backgroundColor: AppTheme.backgroundLight,
-    elevation: 0,
-    selectedItemColor: AppTheme.primaryColor,
-    unselectedItemColor: AppTheme.textSecondary,
-    showUnselectedLabels: true,
-    selectedLabelStyle: TextStyle(
-      color: AppTheme.primaryColor,
-      fontSize: 10,
-      fontWeight: FontWeight.w500,
-    ),
-    unselectedLabelStyle: TextStyle(
-      color: AppTheme.textPrimary,
-      fontSize: 10,
-      fontWeight: FontWeight.w500,
-    ),
-    onTap: (index) {
-      onTap(index);
-    },
-    items: const [
-      BottomNavigationBarItem(
-        icon: Icon(Icons.home_outlined),
-        activeIcon: Icon(Icons.home),
-        label: 'Dashboard',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.people_outline),
-        activeIcon: Icon(Icons.people),
-        label: 'Kelolaan',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.assignment_outlined),
-        activeIcon: Icon(Icons.assignment),
-        label: 'Tugas',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.pie_chart_outline),
-        activeIcon: Icon(Icons.pie_chart),
-        label: 'Prospek',
-      ),
-      // BottomNavigationBarItem(icon: Icon(Icons.logout), label: 'Keluar'),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.settings_outlined),
-        activeIcon: Icon(Icons.settings),
-        label: 'Settings',
-      ),
-    ],
-  );
-}
-
-// Dashboard Widget
+// Dashboard Widget utama Simontok
 Widget buildDashboardWidget({
   required int currentIndex,
   required Function(int) onTap,
@@ -99,9 +22,10 @@ Widget buildDashboardWidget({
             Center(
               child: Text(
                 'SIMONTOK Mobile',
-                style: TextStyle(
-                  color: AppTheme.textWhite,
-                ).copyWith(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: AppTheme.textWhite).copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 30),
@@ -129,23 +53,22 @@ Widget buildDashboardWidget({
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Selamat Datang',
-                              style: TextStyle(color: AppTheme.textPrimary)
-                                  .copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              style: TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
+                            const Text(
                               'Super Admin',
-                              style: TextStyle(color: AppTheme.textPrimary)
-                                  .copyWith(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.secondaryColor,
-                                  ),
+                              style: TextStyle(
+                                color: AppTheme.secondaryColor,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -168,7 +91,7 @@ Widget buildDashboardWidget({
                     ],
                   ),
                   const SizedBox(height: 24),
-                  Divider(color: AppTheme.inputBorder, thickness: 1),
+                  const Divider(color: AppTheme.inputBorder, thickness: 1),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -266,7 +189,7 @@ Widget buildDashboardWidget({
   );
 }
 
-// Action Item Widget
+// Action Item Widget internal
 Widget _buildActionItem({
   required IconData icon,
   required String title,
@@ -291,7 +214,7 @@ Widget _buildActionItem({
         const SizedBox(height: 8),
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppTheme.textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -302,7 +225,7 @@ Widget _buildActionItem({
   );
 }
 
-// Status Card Widget
+// Status Card Widget internal
 Widget _buildStatCard(String title, String value, Color valueColor) {
   return Container(
     padding: const EdgeInsets.all(20),
@@ -315,7 +238,7 @@ Widget _buildStatCard(String title, String value, Color valueColor) {
       children: [
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppTheme.textSecondary,
             fontSize: 14,
             fontWeight: FontWeight.w500,
