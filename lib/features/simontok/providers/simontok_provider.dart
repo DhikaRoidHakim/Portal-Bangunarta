@@ -5,7 +5,7 @@ import 'package:bangunarta_portal/models/simontok/detail_pinjaman_model.dart';
 import 'package:bangunarta_portal/models/simontok/list_tugas_model.dart';
 import 'simontok_repository.dart';
 
-/// Notifier to manage the search query for the Simontok loans list.
+// Notifier untuk mengelola query pencarian untuk daftar pinjaman Simontok.
 class SimontokSearchQuery extends Notifier<String> {
   @override
   String build() => '';
@@ -15,15 +15,16 @@ class SimontokSearchQuery extends Notifier<String> {
   }
 }
 
-/// Provider for the search query.
+/// Provider untuk query pencarian.
 final simontokSearchQueryProvider =
     NotifierProvider<SimontokSearchQuery, String>(() {
-  return SimontokSearchQuery();
-});
+      return SimontokSearchQuery();
+    });
 
-/// FutureProvider that fetches the list of loans from the repository,
-/// reactive to both user authentication state (alias) and search queries.
-final listPinjamanProvider = FutureProvider.autoDispose<ListPinjamanModel>((ref) async {
+// FutureProvider yang mengambil daftar pinjaman dari repository,
+final listPinjamanProvider = FutureProvider.autoDispose<ListPinjamanModel>((
+  ref,
+) async {
   final authState = ref.watch(authProvider);
   final alias = authState.user?.user.alias;
 
@@ -39,13 +40,13 @@ final listPinjamanProvider = FutureProvider.autoDispose<ListPinjamanModel>((ref)
   );
 });
 
-/// FutureProvider.family that fetches details for a specific loan account.
-final detailPinjamanProvider =
-    FutureProvider.autoDispose.family<DetailPinjamanModel, String>((ref, noRekening) async {
-  return SimontokRepository.instance.getDetailPinjaman(noRekening);
-});
+// FutureProvider.family yang mengambil detail untuk akun pinjaman tertentu.
+final detailPinjamanProvider = FutureProvider.autoDispose
+    .family<DetailPinjamanModel, String>((ref, noRekening) async {
+      return SimontokRepository.instance.getDetailPinjaman(noRekening);
+    });
 
-/// Notifier to manage the search query for the Simontok tasks list.
+// Notifier untuk mengelola query pencarian untuk daftar tugas Simontok.
 class SimontokTugasSearchQuery extends Notifier<String> {
   @override
   String build() => '';
@@ -55,15 +56,16 @@ class SimontokTugasSearchQuery extends Notifier<String> {
   }
 }
 
-/// Provider for the tugas search query.
+// Provider untuk query pencarian tugas.
 final simontokTugasSearchQueryProvider =
     NotifierProvider<SimontokTugasSearchQuery, String>(() {
-  return SimontokTugasSearchQuery();
-});
+      return SimontokTugasSearchQuery();
+    });
 
-/// FutureProvider that fetches the list of tasks from the repository,
-/// reactive to both user authentication state (alias) and search queries.
-final listTugasProvider = FutureProvider.autoDispose<ListTugasModel>((ref) async {
+// FutureProvider yang mengambil daftar tugas dari repository,
+final listTugasProvider = FutureProvider.autoDispose<ListTugasModel>((
+  ref,
+) async {
   final authState = ref.watch(authProvider);
   final alias = authState.user?.user.alias;
 
