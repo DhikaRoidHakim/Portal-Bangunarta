@@ -1,36 +1,88 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:bangunarta_portal/features/simontok/providers/simontok_provider.dart';
+import 'package:bangunarta_portal/models/simontok/list_pinjaman_model.dart';
 import 'detail_kredit_screen.dart';
 
-class KelolaanPage extends StatelessWidget {
+class KelolaanPage extends ConsumerStatefulWidget {
   final bool showBackButton;
   const KelolaanPage({super.key, this.showBackButton = true});
 
-  // 5 data dummy nasabah kredit
-  static const List<Map<String, String>> _dummyData = [
-    {'nama': 'ACAH CAHYATI', 'noRekening': '001010140151516756'},
-    {'nama': 'ACENG FAJAR RIZKY PERMANA', 'noRekening': '0010101401523194'},
-    {'nama': 'AGUS YANTO', 'noRekening': '0010101401522603'},
-    {'nama': 'AHMAD MUSHOLLI', 'noRekening': '0010101401521064'},
-    {'nama': 'AHMAD ROHMAT', 'noRekening': '0010101401522079'},
-  ];
+  @override
+  ConsumerState<KelolaanPage> createState() => _KelolaanPageState();
+}
+
+class _KelolaanPageState extends ConsumerState<KelolaanPage> {
+  bool _isSearching = false;
+  late TextEditingController _searchController;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        ref.read(simontokSearchQueryProvider.notifier).updateQuery(query);
+      }
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      if (_isSearching) {
+        _isSearching = false;
+        _searchController.clear();
+        ref.read(simontokSearchQueryProvider.notifier).updateQuery('');
+      } else {
+        _isSearching = true;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final listPinjamanAsync = ref.watch(listPinjamanProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppTheme.primaryColor,
         centerTitle: true,
-        title: const Text(
-          'KREDIT',
-          style: TextStyle(
-            color: AppTheme.textWhite,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: showBackButton
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: _onSearchChanged,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+                decoration: const InputDecoration(
+                  hintText: 'Cari nama debitur...',
+                  hintStyle: TextStyle(color: Colors.white70),
+                  border: InputBorder.none,
+                ),
+              )
+            : const Text(
+                'KREDIT KELOLAAN',
+                style: TextStyle(
+                  color: AppTheme.textWhite,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+        leading: widget.showBackButton
             ? IconButton(
                 icon: const Icon(
                   Icons.arrow_back_ios_new,
@@ -42,118 +94,182 @@ class KelolaanPage extends StatelessWidget {
             : null,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.white, size: 24),
-            onPressed: () {},
+            icon: Icon(
+              _isSearching ? Icons.close : Icons.search,
+              color: Colors.white,
+              size: 24,
+            ),
+            onPressed: _toggleSearch,
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        itemCount: _dummyData.length,
-        itemBuilder: (context, index) {
-          final item = _dummyData[index];
-          return Column(
-            children: [
-              _NasabahTile(
-                nama: item['nama']!,
-                noRekening: item['noRekening']!,
-                onTap: () => _showAksiBottomSheet(context, item['nama']!),
-              ),
-              if (index < _dummyData.length - 1)
-                const Divider(
-                  height: 1,
-                  thickness: 0.8,
-                  color: Color(0xFFE2E8F0),
-                  indent: 72,
-                  endIndent: 0,
-                ),
-            ],
+      body: listPinjamanAsync.when(
+        data: (model) {
+          final dataList = model.data;
+          if (dataList.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          return RefreshIndicator(
+            color: AppTheme.primaryColor,
+            onRefresh: () async {
+              ref.invalidate(listPinjamanProvider);
+            },
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              itemCount: dataList.length,
+              itemBuilder: (context, index) {
+                final item = dataList[index];
+                return Column(
+                  children: [
+                    _NasabahTile(
+                      nama: item.namaDebitur,
+                      noRekening: item.nomorAlt ?? item.nomorRekening,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DetailKreditScreen(
+                              namaDebitur: item.namaDebitur,
+                              nomorKredit: item.nomorAlt ?? item.nomorRekening,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    if (index < dataList.length - 1)
+                      const Divider(
+                        height: 1,
+                        thickness: 0.8,
+                        color: Color(0xFFE2E8F0),
+                        indent: 72,
+                        endIndent: 0,
+                      ),
+                  ],
+                );
+              },
+            ),
           );
         },
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryColor),
+        ),
+        error: (error, stack) => _buildErrorState(error.toString()),
       ),
     );
   }
 
-  void _showAksiBottomSheet(BuildContext context, String nama) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.search_off_rounded,
+                color: AppTheme.primaryColor,
+                size: 56,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Tidak Ada Data Kelolaan',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tidak ditemukan nasabah kredit kelolaan yang cocok atau terdaftar.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                ref.invalidate(listPinjamanProvider);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Segarkan'),
+            ),
+          ],
+        ),
       ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 4),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // Title
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  'Pilih Aksi',
-                  style: TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
-              // Detail Kredit
-              ListTile(
-                leading: const Icon(Icons.person_outline, size: 24),
-                title: const Text(
-                  'Detail Kredit',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DetailKreditScreen(
-                        namaDebitur: nama,
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const Divider(
-                height: 1,
-                thickness: 0.8,
-                color: Color(0xFFE2E8F0),
-                indent: 16,
-                endIndent: 16,
-              ),
-              // Buat Tugas
-              ListTile(
-                leading: const Icon(Icons.description_outlined, size: 24),
-                title: const Text(
-                  'Buat Tugas',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  // TODO: Navigasi ke halaman Buat Tugas
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
     );
   }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.redAccent,
+              size: 56,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Gagal Memuat Data',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message.replaceFirst('Exception: ', ''),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                ref.invalidate(listPinjamanProvider);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
 }
 
 class _NasabahTile extends StatelessWidget {
@@ -176,7 +292,7 @@ class _NasabahTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            // Avatar lingkaran ungu gelap dengan icon person
+            // Avatar lingkaran dengan icon person
             Container(
               width: 44,
               height: 44,

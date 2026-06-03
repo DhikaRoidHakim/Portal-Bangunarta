@@ -3,6 +3,7 @@ import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class NotificationItem {
   const NotificationItem({
@@ -99,16 +100,18 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            Icon(Icons.done_all_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 10),
+            Icon(Icons.done_all_rounded, color: Colors.white, size: 20.sp),
+            SizedBox(width: 10.w),
             Text('Semua notifikasi ditandai dibaca'),
           ],
         ),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppTheme.primaryColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.r),
+        ),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -129,16 +132,22 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            Icon(Icons.delete_outline_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 10),
+            Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.white,
+              size: 20.sp,
+            ),
+            SizedBox(width: 10.w),
             Text('Notifikasi berhasil dihapus'),
           ],
         ),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.redAccent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.r),
+        ),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -150,11 +159,17 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
     } else if (_selectedFilter == 'Belum Dibaca') {
       return _notifications.where((n) => !n.isRead).toList();
     } else if (_selectedFilter == 'Keamanan') {
-      return _notifications.where((n) => n.type == NotificationType.security).toList();
+      return _notifications
+          .where((n) => n.type == NotificationType.security)
+          .toList();
     } else if (_selectedFilter == 'Pengumuman') {
-      return _notifications.where((n) => n.type == NotificationType.announcement).toList();
+      return _notifications
+          .where((n) => n.type == NotificationType.announcement)
+          .toList();
     } else if (_selectedFilter == 'Sistem') {
-      return _notifications.where((n) => n.type == NotificationType.system).toList();
+      return _notifications
+          .where((n) => n.type == NotificationType.system)
+          .toList();
     }
     return _notifications;
   }
@@ -189,69 +204,68 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                 // Drag handle
                 Center(
                   child: Container(
-                    width: 44,
-                    height: 5,
+                    width: 44.w,
+                    height: 5.h,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.24),
-                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.grey.withValues(alpha: .24),
+                      borderRadius: BorderRadius.circular(10.r),
                     ),
                   ),
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: 28.h),
 
                 // Icon & Tag
                 Row(
                   children: [
                     Container(
-                      width: 52,
-                      height: 52,
+                      width: 52.w,
+                      height: 52.h,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            typeColor,
-                            typeColor.withOpacity(0.7),
-                          ],
+                          colors: [typeColor, typeColor.withValues(alpha: .7)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16.r),
                         boxShadow: [
                           BoxShadow(
-                            color: typeColor.withOpacity(0.3),
+                            color: typeColor.withValues(alpha: .3),
                             blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          )
+                            offset: Offset(0, 4),
+                          ),
                         ],
                       ),
                       child: Icon(typeIcon, color: Colors.white, size: 24),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16.w),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 5),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 5.h,
+                          ),
                           decoration: BoxDecoration(
-                            color: typeColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
+                            color: typeColor.withValues(alpha: .1),
+                            borderRadius: BorderRadius.circular(20.r),
                           ),
                           child: Text(
                             typeLabel,
                             style: TextStyle(
                               color: typeColor,
-                              fontSize: 11,
+                              fontSize: 11.sp,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.8,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4.h),
                         Text(
                           item.time,
                           style: TextStyle(
-                            color: AppTheme.textSecondary.withOpacity(0.7),
-                            fontSize: 12,
+                            color: AppTheme.textSecondary.withValues(alpha: .7),
+                            fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -259,35 +273,35 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
                 // Title
                 Text(
                   item.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppTheme.textPrimary,
-                    fontSize: 20,
+                    fontSize: 20.sp,
                     fontWeight: FontWeight.w800,
                     height: 1.3,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
 
                 // Divider
-                WidgetDivider(color: Colors.grey.withOpacity(0.15)),
-                const SizedBox(height: 18),
+                WidgetDivider(color: Colors.grey.withValues(alpha: .15)),
+                SizedBox(height: 18.h),
 
                 // Message text
                 Text(
                   item.message,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppTheme.textPrimary,
-                    fontSize: 14,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
                     height: 1.6,
                   ),
                 ),
-                const SizedBox(height: 36),
+                SizedBox(height: 36.h),
 
                 // Actions
                 Row(
@@ -298,25 +312,29 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                           Navigator.pop(context);
                           _deleteNotification(item);
                         },
-                        icon: const Icon(Icons.delete_outline_rounded,
-                            color: Colors.redAccent, size: 20),
-                        label: const Text(
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.redAccent,
+                          size: 20.sp,
+                        ),
+                        label: Text(
                           'Hapus',
                           style: TextStyle(
                             color: Colors.redAccent,
                             fontWeight: FontWeight.bold,
+                            fontSize: 14.sp,
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: Colors.redAccent, width: 1.2),
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          side: BorderSide(color: Colors.redAccent, width: 1.2),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12.w),
                     Expanded(
                       flex: 2,
                       child: ElevatedButton(
@@ -329,17 +347,18 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Tutup',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
+                            fontSize: 14.sp,
                           ),
                         ),
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
@@ -373,7 +392,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
             leading: Padding(
               padding: const EdgeInsets.only(left: 12),
               child: CircleAvatar(
-                backgroundColor: Colors.white.withOpacity(0.18),
+                backgroundColor: Colors.white.withValues(alpha: .18),
                 child: IconButton(
                   icon: const Icon(
                     Icons.arrow_back_rounded,
@@ -389,8 +408,11 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                   padding: const EdgeInsets.only(right: 16),
                   child: TextButton.icon(
                     onPressed: _markAllAsRead,
-                    icon: const Icon(Icons.done_all_rounded,
-                        color: Colors.white, size: 18),
+                    icon: const Icon(
+                      Icons.done_all_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     label: const Text(
                       'Tandai Dibaca',
                       style: TextStyle(
@@ -400,12 +422,14 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                       ),
                     ),
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.14),
+                      backgroundColor: Colors.white.withValues(alpha: .14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                     ),
                   ),
                 ),
@@ -430,7 +454,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                         height: 180,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.04),
+                          color: Colors.white.withValues(alpha: .04),
                         ),
                       ),
                     ),
@@ -442,7 +466,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.03),
+                          color: Colors.white.withValues(alpha: .03),
                         ),
                       ),
                     ),
@@ -458,10 +482,10 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: .15),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: .2),
                                   width: 1,
                                 ),
                               ),
@@ -496,7 +520,9 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.75),
+                                      color: Colors.white.withValues(
+                                        alpha: .75,
+                                      ),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -541,12 +567,14 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.grey.withOpacity(0.08),
+                              color: Colors.grey.withValues(alpha: .08),
                             ),
                             child: Icon(
                               Icons.notifications_off_outlined,
                               size: 64,
-                              color: AppTheme.textSecondary.withOpacity(0.5),
+                              color: AppTheme.textSecondary.withValues(
+                                alpha: .5,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 18),
@@ -555,7 +583,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary.withOpacity(0.8),
+                              color: AppTheme.textPrimary.withValues(alpha: .8),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -565,7 +593,9 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                                 : 'Tidak ada notifikasi dalam filter ini.',
                             style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.textSecondary.withOpacity(0.7),
+                              color: AppTheme.textSecondary.withValues(
+                                alpha: .7,
+                              ),
                             ),
                           ),
                         ],
@@ -577,7 +607,8 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                   padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
                   sliver: SliverList.separated(
                     itemCount: filteredList.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = filteredList[index];
                       // Dapatkan index asli dari list lengkap untuk state update
@@ -637,8 +668,17 @@ class _FilterHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final filters = ['Semua', 'Belum Dibaca', 'Keamanan', 'Pengumuman', 'Sistem'];
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final filters = [
+      'Semua',
+      'Belum Dibaca',
+      'Keamanan',
+      'Pengumuman',
+      'Sistem',
+    ];
 
     return Container(
       color: AppTheme.backgroundLight,
@@ -668,10 +708,10 @@ class _FilterHeaderDelegate extends SliverPersistentHeaderDelegate {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: AppTheme.primaryColor.withOpacity(0.15),
+                          color: AppTheme.primaryColor.withValues(alpha: .15),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
-                        )
+                        ),
                       ]
                     : [],
               ),
@@ -733,12 +773,14 @@ class _NotificationCard extends StatelessWidget {
           border: Border.all(
             color: notification.isRead
                 ? Colors.transparent
-                : AppTheme.primaryColor.withOpacity(0.12),
+                : AppTheme.primaryColor.withValues(alpha: .12),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(notification.isRead ? 0.04 : 0.06),
+              color: Colors.black.withValues(
+                alpha: notification.isRead ? 0.04 : 0.06,
+              ),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -754,10 +796,7 @@ class _NotificationCard extends StatelessWidget {
                   left: 0,
                   top: 0,
                   bottom: 0,
-                  child: Container(
-                    width: 4,
-                    color: AppTheme.primaryColor,
-                  ),
+                  child: Container(width: 4, color: AppTheme.primaryColor),
                 ),
 
               Padding(
@@ -771,10 +810,7 @@ class _NotificationCard extends StatelessWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            typeColor,
-                            typeColor.withOpacity(0.8),
-                          ],
+                          colors: [typeColor, typeColor.withValues(alpha: .8)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -793,9 +829,11 @@ class _NotificationCard extends StatelessWidget {
                           Container(
                             margin: const EdgeInsets.only(bottom: 5),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
-                              color: typeColor.withOpacity(0.1),
+                              color: typeColor.withValues(alpha: .1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -830,7 +868,11 @@ class _NotificationCard extends StatelessWidget {
                                 Container(
                                   width: 8,
                                   height: 8,
-                                  margin: const EdgeInsets.only(top: 4, left: 6, right: 4),
+                                  margin: const EdgeInsets.only(
+                                    top: 4,
+                                    left: 6,
+                                    right: 4,
+                                  ),
                                   decoration: const BoxDecoration(
                                     color: AppTheme.primaryColor,
                                     shape: BoxShape.circle,
@@ -846,7 +888,9 @@ class _NotificationCard extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: AppTheme.textSecondary.withOpacity(0.85),
+                              color: AppTheme.textSecondary.withValues(
+                                alpha: .85,
+                              ),
                               fontSize: 12.5,
                               fontWeight: FontWeight.w500,
                               height: 1.4,
@@ -858,7 +902,9 @@ class _NotificationCard extends StatelessWidget {
                           Text(
                             notification.time,
                             style: TextStyle(
-                              color: AppTheme.textSecondary.withOpacity(0.6),
+                              color: AppTheme.textSecondary.withValues(
+                                alpha: .6,
+                              ),
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                             ),
@@ -869,9 +915,11 @@ class _NotificationCard extends StatelessWidget {
 
                     // Quick Actions (Delete/Close button)
                     IconButton(
-                      icon: Icon(Icons.close_rounded,
-                          size: 18,
-                          color: AppTheme.textSecondary.withOpacity(0.5)),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: AppTheme.textSecondary.withValues(alpha: .5),
+                      ),
                       onPressed: onDelete,
                       splashRadius: 18,
                     ),

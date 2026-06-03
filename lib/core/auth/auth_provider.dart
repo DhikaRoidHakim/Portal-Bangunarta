@@ -115,6 +115,10 @@ class AuthNotifier extends Notifier<AuthState> {
       state = AuthState.unauthenticated();
     }
   }
+
+  void forceUnauthenticated() {
+    state = AuthState.unauthenticated();
+  }
 }
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(() {

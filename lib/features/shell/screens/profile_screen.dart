@@ -3,11 +3,13 @@ import 'package:bangunarta_portal/core/auth/auth_repository.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/shell/widgets/floatingnav_widget.dart';
 import 'package:bangunarta_portal/models/auth/auth_me_model.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:bangunarta_portal/core/utils/profile_util.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -32,13 +34,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         statusBarIconBrightness: Brightness.light,
       ),
     );
-    _loadBiometricSetting();
+
+    loadBiometricSetting(context, (isEnabled) {
+      setState(() {
+        _isBiometricEnabled = isEnabled;
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final employee = authState.user?.employee;
+    final user = authState.user?.user;
 
     Widget bodyWidget;
 
@@ -46,121 +53,77 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       bodyWidget = const Center(
         child: CircularProgressIndicator(color: AppTheme.primaryColor),
       );
-    } else if (employee == null) {
+    } else if (user == null) {
       bodyWidget = _buildErrorState();
     } else {
       bodyWidget = RefreshIndicator(
         color: AppTheme.primaryColor,
-        onRefresh: _refreshProfile,
+        onRefresh: () => refreshProfile(ref),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 120),
           child: Column(
             children: [
-              _buildHeader(employee),
-              const SizedBox(height: 20),
+              _buildHeader(user),
+              SizedBox(height: 20.h),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
                     _buildChangePasswordButton(),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                     _buildBiometricSettingTile(),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                     _buildLogoutButton(),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                     _buildInfoSection(
                       title: 'Informasi Personal',
                       children: [
                         _buildInfoTile(
                           Icons.badge_outlined,
-                          'Nomor Karyawan',
-                          employee.nomorKaryawan,
-                        ),
-                        _buildInfoTile(
-                          Icons.credit_card_outlined,
-                          'Nomor KTP',
-                          employee.nomorKtp,
+                          'Username / NIP',
+                          user.username,
                         ),
                         _buildInfoTile(
                           Icons.person_outline_rounded,
-                          'Jenis Kelamin',
-                          employee.jenisKelamin,
+                          'Nama Lengkap',
+                          user.name,
                         ),
                         _buildInfoTile(
-                          Icons.cake_outlined,
-                          'Tempat, Tanggal Lahir',
-                          _joinValues([
-                            employee.tempatLahir,
-                            employee.tanggalLahir,
-                          ]),
-                        ),
-                        _buildInfoTile(
-                          Icons.family_restroom_outlined,
-                          'Status Perkawinan',
-                          employee.statusPerkawinan,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildInfoSection(
-                      title: 'Kontak & Alamat',
-                      children: [
-                        _buildInfoTile(
-                          Icons.home_outlined,
-                          'Alamat',
-                          employee.alamatLengkap,
-                        ),
-                        _buildInfoTile(
-                          Icons.markunread_mailbox_outlined,
-                          'Kode Pos',
-                          employee.kodePos,
-                        ),
-                        _buildInfoTile(
-                          Icons.phone_android_outlined,
-                          'Nomor Handphone',
-                          employee.nomorHandphone,
-                        ),
-                        _buildInfoTile(
-                          Icons.chat_outlined,
-                          'Nomor WhatsApp',
-                          employee.nomorWhatsapp,
+                          Icons.alternate_email_rounded,
+                          'Alias',
+                          user.alias,
                         ),
                         _buildInfoTile(
                           Icons.email_outlined,
                           'Email',
-                          employee.alamatEmail,
+                          user.email,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                     _buildInfoSection(
                       title: 'Informasi Pekerjaan',
                       children: [
                         _buildInfoTile(
                           Icons.work_outline_rounded,
                           'Jabatan',
-                          employee.jabatan,
+                          user.role,
                         ),
                         _buildInfoTile(
                           Icons.business_outlined,
                           'Kantor',
-                          employee.kantor,
+                          user.office,
                         ),
                         _buildInfoTile(
-                          Icons.verified_user_outlined,
-                          'Status Bekerja',
-                          employee.statusBekerja,
+                          Icons.code_rounded,
+                          'Kode MSO',
+                          user.msoCode,
                         ),
                         _buildInfoTile(
-                          Icons.event_available_outlined,
-                          'Tanggal Bekerja',
-                          employee.tanggalBekerja,
-                        ),
-                        _buildInfoTile(
-                          Icons.swap_horiz_rounded,
-                          'Tanggal Mutasi',
-                          employee.tanggalMutasi,
+                          Icons.qr_code_rounded,
+                          'Kode Collector',
+                          user.collectorCode,
                         ),
                       ],
                     ),
@@ -199,26 +162,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {},
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
           child: Padding(
             padding: const EdgeInsets.all(18),
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 44.w,
+                  height: 44.h,
                   decoration: BoxDecoration(
                     color: AppTheme.primaryColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(14.r),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.lock_reset_rounded,
                     color: AppTheme.primaryColor,
-                    size: 24,
+                    size: 24.sp,
                   ),
                 ),
-                const SizedBox(width: 14),
-                const Expanded(
+                SizedBox(width: 14.w),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -226,26 +189,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         'Ganti Password',
                         style: TextStyle(
                           color: AppTheme.textPrimary,
-                          fontSize: 15,
+                          fontSize: 15.sp,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         'Ubah password akun Anda',
                         style: TextStyle(
                           color: AppTheme.textSecondary,
-                          fontSize: 12,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
                   color: AppTheme.textSecondary,
-                  size: 26,
+                  size: 26.sp,
                 ),
               ],
             ),
@@ -274,20 +237,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 44.w,
+              height: 44.h,
               decoration: BoxDecoration(
                 color: AppTheme.primaryColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.fingerprint_rounded,
                 color: AppTheme.primaryColor,
-                size: 24,
+                size: 24.sp,
               ),
             ),
-            const SizedBox(width: 14),
-            const Expanded(
+            SizedBox(width: 14.w),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -295,16 +258,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     'Login Biometrik',
                     style: TextStyle(
                       color: AppTheme.textPrimary,
-                      fontSize: 15,
+                      fontSize: 15.sp,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: 4.h),
                   Text(
                     'Aktifkan login menggunakan sidik jari atau wajah',
                     style: TextStyle(
                       color: AppTheme.textSecondary,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -346,20 +309,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 44.w,
+                  height: 44.h,
                   decoration: BoxDecoration(
                     color: Colors.redAccent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(14.r),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.logout_rounded,
                     color: Colors.redAccent,
-                    size: 24,
+                    size: 24.sp,
                   ),
                 ),
-                const SizedBox(width: 14),
-                const Expanded(
+                SizedBox(width: 14.w),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -367,16 +330,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         'Logout',
                         style: TextStyle(
                           color: AppTheme.textPrimary,
-                          fontSize: 15,
+                          fontSize: 15.sp,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         'Keluar dari akun Anda',
                         style: TextStyle(
                           color: AppTheme.textSecondary,
-                          fontSize: 12,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -384,18 +347,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ),
                 ),
                 _isLoggingOut
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
+                    ? SizedBox(
+                        width: 22.w,
+                        height: 22.h,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Colors.redAccent,
                         ),
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.chevron_right_rounded,
                         color: AppTheme.textSecondary,
-                        size: 26,
+                        size: 26.sp,
                       ),
               ],
             ),
@@ -405,9 +368,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Widget _buildHeader(EmployeeModel employee) {
-    final name = _displayValue(employee.namaLengkap, fallback: 'User');
-    final job = _displayValue(employee.jabatan, fallback: 'Pegawai');
+  Widget _buildHeader(UserModel user) {
+    final name = _displayValue(user.name, fallback: 'User');
+    final job = _displayValue(user.role, fallback: 'Pegawai');
 
     return Container(
       width: double.infinity,
@@ -431,34 +394,34 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               shape: BoxShape.circle,
               color: Colors.white.withValues(alpha: 0.2),
             ),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 44,
               backgroundColor: Colors.white,
               child: Icon(
                 Icons.person_rounded,
                 color: AppTheme.primaryColor,
-                size: 48,
+                size: 48.sp,
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Text(
             name,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 22,
+              fontSize: 22.sp,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.4,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Text(
             job,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.8),
-              fontSize: 14,
+              fontSize: 14.sp,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -593,20 +556,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
       ),
     );
-  }
-
-  Future<void> _refreshProfile() async {
-    await ref.read(authProvider.notifier).checkAuth();
-  }
-
-  Future<void> _loadBiometricSetting() async {
-    final isEnabled = await AuthRepository.instance.isBiometricEnabled();
-
-    if (!mounted) return;
-
-    setState(() {
-      _isBiometricEnabled = isEnabled;
-    });
   }
 
   Future<void> _toggleBiometric(bool value) async {
@@ -757,17 +706,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     return trimmedValue;
   }
 
-  String _joinValues(List<String?> values) {
-    final validValues = values
-        .map((value) => value?.trim())
-        .where((value) => value != null && value.isNotEmpty)
-        .cast<String>()
-        .toList();
 
-    if (validValues.isEmpty) return '-';
-
-    return validValues.join(', ');
-  }
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(

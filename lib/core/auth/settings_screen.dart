@@ -10,8 +10,8 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
-    final user = authState.user;
-    final name = user?.employee.namaLengkap?.trim() ?? 'User';
+    final authMe = authState.user;
+    final name = authMe?.user.name?.trim() ?? 'User';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
@@ -75,7 +75,7 @@ class SettingsPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        user?.employee.jabatan ?? 'Karyawan',
+                        authMe?.user.role ?? 'Karyawan',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,

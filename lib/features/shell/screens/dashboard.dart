@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
@@ -44,7 +45,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   List<_ServiceItem> get _services => [
     _ServiceItem(
       title: 'Samba',
-      subtitle: 'Pengelolaan Kredit',
+      subtitle: 'Saving Mobile Bangunarta',
       iconPath: 'assets/icons/cash-banknote-plus.svg',
       color: const Color(0xFF4FA8D2),
       gradient: const [Color(0xFF4FA8D2), Color(0xFF3388CA)],
@@ -52,7 +53,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     ),
     _ServiceItem(
       title: 'Simontok',
-      subtitle: 'Monitoring & Tagihan',
+      subtitle: 'Sistem Monitoring Kredit',
       iconPath: 'assets/icons/device-desktop-analytics.svg',
       color: const Color(0xFFE28C4A),
       gradient: const [Color(0xFFE28C4A), Color(0xFFD6732B)],
@@ -80,8 +81,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final user = authState.user;
-    final name = user?.employee.namaLengkap?.trim();
+    final authMe = authState.user;
+    final name = authMe?.user.name?.trim();
     final loggedInName = name == null || name.isEmpty ? 'User' : name;
 
     final filteredServices = _services.where((s) {
@@ -102,11 +103,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             // ─── Header ───
             _buildHeader(loggedInName),
 
-            const SizedBox(height: 28),
+            SizedBox(height: 28.h),
 
             // ─── Section: Layanan ───
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -114,8 +115,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     _searchQuery.isEmpty
                         ? 'Layanan'
                         : 'Hasil Pencarian (${filteredServices.length})',
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: TextStyle(
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
                       letterSpacing: -0.3,
@@ -130,7 +131,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       child: Text(
                         'Bersihkan',
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.primaryColor.withValues(alpha: 0.8),
                         ),
@@ -139,11 +140,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
 
             // ─── Service Cards ───
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: filteredServices.isEmpty
                   ? _buildEmptyState()
                   : _buildServicesList(filteredServices),
@@ -170,15 +171,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   Widget _buildHeader(String loggedInName) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF1B3A7D), Color(0xFF264DA6)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
+          bottomLeft: Radius.circular(32.r),
+          bottomRight: Radius.circular(32.r),
         ),
       ),
       child: SafeArea(
@@ -197,17 +198,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.35),
-                        width: 1.5,
+                        width: 1.5.w,
                       ),
                     ),
-                    child: const CircleAvatar(
-                      radius: 22,
-                      backgroundImage: AssetImage(
+                    child: CircleAvatar(
+                      radius: 22.r,
+                      backgroundImage: const AssetImage(
                         'assets/images/logo_polos.png',
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: 14.w),
 
                   // Greeting + Name
                   Expanded(
@@ -218,18 +219,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           getGreeting(),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.7),
-                            fontSize: 12,
+                            fontSize: 12.sp,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2.h),
                         Text(
                           loggedInName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: 18.sp,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.3,
                           ),
@@ -240,24 +241,24 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
                   // Notification
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(14.r),
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(14.r),
                           border: Border.all(
                             color: Colors.white.withValues(alpha: 0.18),
                           ),
                         ),
                         child: GestureDetector(
                           onTap: () => context.push('/dashboard/notifications'),
-                          child: const Icon(
+                          child: Icon(
                             Icons.notifications_none_rounded,
                             color: Colors.white,
-                            size: 22,
+                            size: 22.r,
                           ),
                         ),
                       ),
@@ -266,49 +267,41 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ],
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
 
               // ── Search Bar ──
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.15),
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 2,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 2.h),
                 child: Row(
                   children: [
                     Icon(
                       Icons.search_rounded,
                       color: Colors.white.withValues(alpha: 0.6),
-                      size: 22,
+                      size: 22.r,
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10.w),
                     Expanded(
                       child: TextField(
                         controller: _searchController,
                         onChanged: (v) => setState(() => _searchQuery = v),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 14.sp),
                         decoration: InputDecoration(
                           hintText: 'Cari layanan...',
                           hintStyle: TextStyle(
                             color: Colors.white.withValues(alpha: 0.45),
-                            fontSize: 14,
+                            fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
                           ),
                           border: InputBorder.none,
                           isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 12.h),
                         ),
                       ),
                     ),
@@ -321,7 +314,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         child: Icon(
                           Icons.close_rounded,
                           color: Colors.white.withValues(alpha: 0.7),
-                          size: 20,
+                          size: 20.r,
                         ),
                       ),
                   ],
@@ -335,7 +328,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   // ═══════════════════════════════════════════════════════
-  //  SERVICE LIST (vertical cards)
+  //  List Layanan
   // ═══════════════════════════════════════════════════════
 
   Widget _buildServicesList(List<_ServiceItem> items) {
@@ -371,7 +364,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             border: Border.all(
               color: isDisabled
                   ? Colors.grey.shade200
@@ -382,15 +375,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             children: [
               // Icon
               Container(
-                width: 52,
-                height: 52,
+                width: 52.w,
+                height: 52.h,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: cardGradient,
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16.r),
                   boxShadow: isDisabled
                       ? []
                       : [
@@ -404,8 +397,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 child: Center(
                   child: SvgPicture.asset(
                     item.iconPath,
-                    width: 24,
-                    height: 24,
+                    width: 24.w,
+                    height: 24.h,
                     colorFilter: const ColorFilter.mode(
                       Colors.white,
                       BlendMode.srcIn,
@@ -413,7 +406,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16.w),
 
               // Title + subtitle
               Expanded(
@@ -431,7 +424,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         letterSpacing: -0.2,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3.h),
                     Text(
                       item.subtitle,
                       style: TextStyle(
@@ -454,16 +447,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 )
               else
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: 36.w,
+                  height: 36.h,
                   decoration: BoxDecoration(
                     color: cardColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Icon(
                     Icons.arrow_forward_ios_rounded,
                     color: cardColor,
-                    size: 16,
+                    size: 16.sp,
                   ),
                 ),
             ],
@@ -483,7 +476,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: Colors.grey.shade100),
       ),
       child: Column(
@@ -498,11 +491,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             child: Icon(
               Icons.search_off_rounded,
               color: Colors.amber.shade700,
-              size: 36,
+              size: 36.sp,
             ),
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16.h),
+          Text(
             'Layanan Tidak Ditemukan',
             style: TextStyle(
               fontSize: 15,
@@ -510,18 +503,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Text(
             'Tidak ada layanan yang cocok\ndengan "$_searchQuery"',
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: AppTheme.textSecondary,
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           TextButton(
             onPressed: () => setState(() {
               _searchController.clear();
@@ -537,9 +530,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
               ),
             ),
-            child: const Text(
+            child: Text(
               'Reset Pencarian',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
             ),
           ),
         ],

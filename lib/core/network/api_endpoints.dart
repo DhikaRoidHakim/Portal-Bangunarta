@@ -2,12 +2,21 @@ class ApiEndpoints {
   static const bool isProduction = true;
 
   static const String devBaseUrl = 'http://192.168.2.9:8000';
-  static const String prodBaseUrl = 'https://codex.pba.co.id';
+  static const String prodBaseUrl = 'https://codex.bprbangunarta.co.id';
 
   static String get baseUrl => isProduction ? prodBaseUrl : devBaseUrl;
 
-  static const String login = '/api/jwt/auth';
-  static const String me = '/api/jwt/me';
-  static const String refresh = '/api/jwt/refresh';
-  static const String destroy = '/api/jwt/destroy';
+  // Endpoints Authentication
+  static const String login = '/api/jwt-auth';
+  static const String me = '/api/jwt-me';
+  static const String refresh = '/api/jwt-refresh';
+  static const String destroy = '/api/jwt-destroy';
+
+  // Endpoints Simontok
+  static const String listPinjaman = '/api/simontok/pinjaman';
+  static const String detailPinjaman = '/api/simontok/pinjaman/';
+  static const String listTugas = '/api/simontok/tugas';
+  static const String submitPenagihan = '/api/simontok/tugas/';
+  static const String submitVerifikasi = '/api/simontok/verifikasi-pinjaman/';
+  static const String submitVerifikasiJaminan = '/api/simontok/verifikasi-jaminan/';
 }

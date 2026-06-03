@@ -9,6 +9,8 @@ class DioClient {
 
   static final DioClient instance = DioClient._();
 
+  void Function()? onUnauthorized;
+
   late final Dio dio =
       Dio(
           BaseOptions(
@@ -69,7 +71,11 @@ class DioClient {
                 handler.resolve(response);
               } catch (_) {
                 await AuthRepository.instance.logout();
-                _redirectToLogin();
+                if (onUnauthorized != null) {
+                  onUnauthorized!();
+                } else {
+                  _redirectToLogin();
+                }
                 handler.next(error);
               }
             },

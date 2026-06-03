@@ -1,53 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:bangunarta_portal/features/simontok/providers/simontok_provider.dart';
+import 'package:bangunarta_portal/models/simontok/detail_pinjaman_model.dart';
 
-// ─────────────────────────────────────────────────────────────
-// Main Screen
-// ─────────────────────────────────────────────────────────────
-class DetailKreditScreen extends StatefulWidget {
+class DetailKreditScreen extends ConsumerStatefulWidget {
   final String? namaDebitur;
   final String? nomorKredit;
 
-  const DetailKreditScreen({
-    super.key,
-    this.namaDebitur,
-    this.nomorKredit,
-  });
+  const DetailKreditScreen({super.key, this.namaDebitur, this.nomorKredit});
 
   @override
-  State<DetailKreditScreen> createState() => _DetailKreditScreenState();
+  ConsumerState<DetailKreditScreen> createState() => _DetailKreditScreenState();
 }
 
-class _DetailKreditScreenState extends State<DetailKreditScreen>
+class _DetailKreditScreenState extends ConsumerState<DetailKreditScreen>
     with SingleTickerProviderStateMixin {
   int _selectedTab = 0;
   late AnimationController _headerAnim;
   late Animation<double> _fadeAnim;
 
-  final List<Map<String, dynamic>> _penangananList = [
-    {
-      'tanggal': 'Rabu, 20 Agustus 2025',
-      'isExpanded': true,
-      'petugas': 'Cecep Suhandi',
-      'jenis': 'Melakukan Penagihan – Penagihan Kredit',
-      'fu': 'Fu kerumah deb',
-      'lainnya':
-          'Acah, bertemu dengan deb, deb akan bayar dikantor tgl 22.08.25 sumber dana dari hasil gaji suaminya di bangunan',
-      'tunggakanPokok': '0',
-      'tunggakanBunga': '0',
-      'tunggakanDenda': '0',
-      'catatan':
-          'M. Zam Zami: pastikan kembali catat di google calender',
-    },
-    {'tanggal': 'Jumat, 18 Juli 2025', 'isExpanded': false},
-    {'tanggal': 'Kamis, 17 Juli 2025', 'isExpanded': false},
-    {'tanggal': 'Rabu, 16 Juli 2025', 'isExpanded': false},
-    {'tanggal': 'Rabu, 16 Juli 2025', 'isExpanded': false},
-    {'tanggal': 'Selasa, 15 Juli 2025', 'isExpanded': false},
-    {'tanggal': 'Kamis, 26 Juni 2025', 'isExpanded': false},
-    {'tanggal': 'Kamis, 26 Juni 2025', 'isExpanded': false},
-    {'tanggal': 'Rabu, 25 Juni 2025', 'isExpanded': false},
-  ];
+  final Set<int> _expandedTaskIds = {};
 
   @override
   void initState() {
@@ -65,33 +39,141 @@ class _DetailKreditScreenState extends State<DetailKreditScreen>
     super.dispose();
   }
 
+  String _formatRupiah(String? value) {
+    if (value == null || value.isEmpty) return 'Rp 0';
+    final number = double.tryParse(value);
+    if (number == null) return value;
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+    return formatter.format(number);
+  }
+
+  String _formatRupiahShort(String? value) {
+    if (value == null || value.isEmpty) return '0';
+    final number = double.tryParse(value);
+    if (number == null) return value;
+
+    if (number >= 1000000) {
+      final millions = number / 1000000;
+      final formatted = millions.toStringAsFixed(
+        millions.truncateToDouble() == millions ? 0 : 1,
+      );
+      return '$formatted Jt';
+    }
+
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: '',
+      decimalDigits: 0,
+    );
+    return formatter.format(number);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final nama = widget.namaDebitur ?? 'ACAH CAHYATI';
-    final noKredit = widget.nomorKredit ?? '001010140151516756';
+    final noRekening = widget.nomorKredit ?? '';
+    final detailPinjamanAsync = ref.watch(detailPinjamanProvider(noRekening));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F8),
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          _buildSliverAppBar(nama, noKredit, innerBoxIsScrolled),
-        ],
-        body: _buildBody(),
+      body: detailPinjamanAsync.when(
+        data: (model) {
+          final credit = model.data.credit;
+          final collaterals = model.data.collaterals;
+          final tasks = model.data.tasks;
+
+          return RefreshIndicator(
+            color: AppTheme.primaryColor,
+            onRefresh: () async {
+              ref.invalidate(detailPinjamanProvider(noRekening));
+            },
+            child: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                _buildSliverAppBar(credit, innerBoxIsScrolled),
+              ],
+              body: _buildBody(credit, collaterals, tasks),
+            ),
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryColor),
+        ),
+        error: (error, stack) => _buildErrorState(error.toString()),
       ),
     );
   }
 
-  // ── Sliver AppBar with gradient header ──────────────────────
-  Widget _buildSliverAppBar(
-      String nama, String noKredit, bool innerBoxIsScrolled) {
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.redAccent,
+              size: 56,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Gagal Memuat Detail',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message.replaceFirst('Exception: ', ''),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                ref.invalidate(
+                  detailPinjamanProvider(widget.nomorKredit ?? ''),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSliverAppBar(CreditDetailModel credit, bool innerBoxIsScrolled) {
+    final nama = credit.namaDebitur;
+    final noKredit = credit.nomorAlt ?? credit.nomorRekening;
+
     return SliverAppBar(
       expandedHeight: 190,
       pinned: true,
       elevation: 0,
       backgroundColor: AppTheme.primaryColor,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new,
-            color: Colors.white, size: 20),
+        icon: const Icon(
+          Icons.arrow_back_ios_new,
+          color: Colors.white,
+          size: 20,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
       title: AnimatedOpacity(
@@ -109,30 +191,29 @@ class _DetailKreditScreenState extends State<DetailKreditScreen>
       centerTitle: true,
       flexibleSpace: FlexibleSpaceBar(
         collapseMode: CollapseMode.pin,
-        background: _buildHeaderBackground(nama, noKredit),
+        background: _buildHeaderBackground(credit),
       ),
     );
   }
 
-  Widget _buildHeaderBackground(String nama, String noKredit) {
+  Widget _buildHeaderBackground(CreditDetailModel credit) {
+    final nama = credit.namaDebitur;
+    final noKredit = credit.nomorAlt ?? credit.nomorRekening;
+    final isLancar = credit.coll == '1';
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1a1070),
-            Color(0xFF092966),
-            Color(0xFF0d3d7a),
-          ],
+          colors: [Color(0xFF1a1070), Color(0xFF092966), Color(0xFF0d3d7a)],
         ),
       ),
       child: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnim,
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,16 +257,14 @@ class _DetailKreditScreenState extends State<DetailKreditScreen>
                             children: [
                               Icon(
                                 Icons.credit_card_outlined,
-                                color:
-                                    Colors.white.withValues(alpha: .7),
+                                color: Colors.white.withValues(alpha: .7),
                                 size: 13,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 noKredit,
                                 style: TextStyle(
-                                  color:
-                                      Colors.white.withValues(alpha: .8),
+                                  color: Colors.white.withValues(alpha: .8),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
                                 ),
@@ -195,23 +274,32 @@ class _DetailKreditScreenState extends State<DetailKreditScreen>
                         ],
                       ),
                     ),
-                    // Status badge
+                    // Status Badge
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: .2),
+                        color: isLancar
+                            ? const Color(0xFF10B981).withValues(alpha: .2)
+                            : Colors.amber.withValues(alpha: .2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: const Color(0xFF10B981)
-                              .withValues(alpha: .5),
+                          color: isLancar
+                              ? const Color(0xFF10B981).withValues(alpha: .5)
+                              : Colors.amber.withValues(alpha: .5),
                           width: 1,
                         ),
                       ),
-                      child: const Text(
-                        'Aktif',
+                      child: Text(
+                        isLancar
+                            ? 'Lancar (Coll ${credit.coll})'
+                            : 'Perhatian (Coll ${credit.coll})',
                         style: TextStyle(
-                          color: Color(0xFF6EE7B7),
+                          color: isLancar
+                              ? const Color(0xFF6EE7B7)
+                              : Colors.amber.shade200,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -224,19 +312,22 @@ class _DetailKreditScreenState extends State<DetailKreditScreen>
                 Row(
                   children: [
                     _MiniStat(
-                        label: 'Plafon',
-                        value: '18,6 Jt',
-                        icon: Icons.account_balance_wallet_outlined),
+                      label: 'Plafon',
+                      value: _formatRupiahShort(credit.plafondAwal),
+                      icon: Icons.account_balance_wallet_outlined,
+                    ),
                     _miniDivider(),
                     _MiniStat(
-                        label: 'Baki Debet',
-                        value: '4,26 Jt',
-                        icon: Icons.payments_outlined),
+                      label: 'Baki Debet',
+                      value: _formatRupiahShort(credit.bakiDebet),
+                      icon: Icons.payments_outlined,
+                    ),
                     _miniDivider(),
                     _MiniStat(
-                        label: 'Angsuran',
-                        value: 'Ke-38',
-                        icon: Icons.calendar_today_outlined),
+                      label: 'Jangka Waktu',
+                      value: '${credit.jangkaWaktu ?? "-"} Bln',
+                      icon: Icons.calendar_today_outlined,
+                    ),
                   ],
                 ),
               ],
@@ -248,17 +339,20 @@ class _DetailKreditScreenState extends State<DetailKreditScreen>
   }
 
   Widget _miniDivider() => Container(
-        width: 1,
-        height: 32,
-        color: Colors.white.withValues(alpha: .2),
-        margin: const EdgeInsets.symmetric(horizontal: 12),
-      );
+    width: 1,
+    height: 32,
+    color: Colors.white.withValues(alpha: .2),
+    margin: const EdgeInsets.symmetric(horizontal: 12),
+  );
 
-  // ── Body ────────────────────────────────────────────────────
-  Widget _buildBody() {
+  Widget _buildBody(
+    CreditDetailModel credit,
+    List<CollateralModel> collaterals,
+    List<TaskModel> tasks,
+  ) {
     return Column(
       children: [
-        // Tab pill selector
+        // Tab selectors
         Container(
           color: AppTheme.primaryColor,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
@@ -282,19 +376,23 @@ class _DetailKreditScreenState extends State<DetailKreditScreen>
               ),
             ),
             child: _selectedTab == 0
-                ? const _KreditTab()
+                ? _KreditTab(credit: credit, formatRupiah: _formatRupiah)
                 : _selectedTab == 1
-                    ? const _AgunanTab()
-                    : _PenangananTab(
-                        key: const ValueKey('penanganan'),
-                        items: _penangananList,
-                        onToggle: (index) {
-                          setState(() {
-                            _penangananList[index]['isExpanded'] =
-                                !_penangananList[index]['isExpanded'];
-                          });
-                        },
-                      ),
+                ? _AgunanTab(collaterals: collaterals)
+                : _PenangananTab(
+                    key: const ValueKey('penanganan'),
+                    tasks: tasks,
+                    expandedTaskIds: _expandedTaskIds,
+                    onToggle: (id) {
+                      setState(() {
+                        if (_expandedTaskIds.contains(id)) {
+                          _expandedTaskIds.remove(id);
+                        } else {
+                          _expandedTaskIds.add(id);
+                        }
+                      });
+                    },
+                  ),
           ),
         ),
       ],
@@ -302,15 +400,15 @@ class _DetailKreditScreenState extends State<DetailKreditScreen>
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Mini Stat Widget (header strip)
-// ─────────────────────────────────────────────────────────────
 class _MiniStat extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
-  const _MiniStat(
-      {required this.label, required this.value, required this.icon});
+  const _MiniStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -346,9 +444,6 @@ class _MiniStat extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Tab Selector – premium pill style
-// ─────────────────────────────────────────────────────────────
 class _TabSelector extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onChanged;
@@ -388,7 +483,7 @@ class _TabSelector extends StatelessWidget {
                             color: Colors.black.withValues(alpha: .12),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
-                          )
+                          ),
                         ]
                       : [],
                 ),
@@ -426,50 +521,113 @@ class _TabSelector extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Tab 1: Kredit
-// ─────────────────────────────────────────────────────────────
 class _KreditTab extends StatelessWidget {
-  const _KreditTab();
+  final CreditDetailModel credit;
+  final String Function(String?) formatRupiah;
 
-  static const _sections = [
+  const _KreditTab({required this.credit, required this.formatRupiah});
+
+  List<Map<String, dynamic>> get _sections => [
     {
       'header': 'Informasi Kontak',
       'fields': [
-        {'label': 'Nomor HP', 'value': '081212450920', 'icon': 'phone'},
-        {'label': 'Nomor CIF', 'value': '00133317709', 'icon': 'badge'},
-        {'label': 'Nomor SPK', 'value': '591/KRU/IV/2019', 'icon': 'doc'},
+        {'label': 'Nomor HP', 'value': credit.nomorHp ?? '-', 'icon': 'phone'},
         {
-          'label': 'No. Tabungan',
-          'value': '0010101201034165',
-          'icon': 'savings'
+          'label': 'Nomor CIF',
+          'value': credit.nomorCif ?? '-',
+          'icon': 'badge',
+        },
+        {
+          'label': 'No. Rekening Alternatif',
+          'value': credit.nomorAlt ?? '-',
+          'icon': 'doc',
+        },
+        {
+          'label': 'Wilayah / Resort',
+          'value': credit.wilayah ?? '-',
+          'icon': 'location',
         },
       ],
     },
     {
       'header': 'Detail Fasilitas',
       'fields': [
-        {'label': 'Plafon', 'value': 'Rp 18.600.000', 'icon': 'money', 'highlight': true},
-        {'label': 'Baki Debet', 'value': 'Rp 4.262.500', 'icon': 'money', 'highlight': true},
-        {'label': 'Jangka Waktu', 'value': '48 Bulan', 'icon': 'time'},
-        {'label': 'Rate Bunga', 'value': '18% / tahun', 'icon': 'percent'},
-        {'label': 'Metode RPS', 'value': 'Flat', 'icon': 'method'},
+        {
+          'label': 'Plafon',
+          'value': formatRupiah(credit.plafondAwal),
+          'icon': 'money',
+          'highlight': true,
+        },
+        {
+          'label': 'Baki Debet',
+          'value': formatRupiah(credit.bakiDebet),
+          'icon': 'money',
+          'highlight': true,
+        },
+        {
+          'label': 'Jangka Waktu',
+          'value': '${credit.jangkaWaktu ?? "-"} Bulan',
+          'icon': 'time',
+        },
+        {
+          'label': 'Rate Bunga',
+          'value': '${credit.rate ?? "-"}%',
+          'icon': 'percent',
+        },
+        {
+          'label': 'Metode RPS',
+          'value': credit.metodeRps ?? '-',
+          'icon': 'method',
+        },
       ],
     },
     {
       'header': 'Jadwal & Status',
       'fields': [
-        {'label': 'Realisasi', 'value': '14 Juni 2022', 'icon': 'calendar'},
-        {'label': 'Jatuh Tempo', 'value': '14 Juni 2026', 'icon': 'calendar'},
-        {'label': 'Angsuran Ke', 'value': '38 dari 48', 'icon': 'progress'},
+        {
+          'label': 'Realisasi',
+          'value': credit.tglRealisasi ?? '-',
+          'icon': 'calendar',
+        },
+        {
+          'label': 'Jatuh Tempo',
+          'value': credit.tglJatuhTempo ?? '-',
+          'icon': 'calendar',
+        },
+        {
+          'label': 'Kolektor Penanggung Jawab',
+          'value': credit.kolektor ?? '-',
+          'icon': 'badge',
+        },
       ],
     },
     {
       'header': 'Tunggakan',
       'fields': [
-        {'label': 'Tunggakan Pokok', 'value': 'Rp 0', 'icon': 'money', 'ok': true},
-        {'label': 'Tunggakan Bunga', 'value': 'Rp 0', 'icon': 'money', 'ok': true},
-        {'label': 'Tunggakan Denda', 'value': 'Rp 0', 'icon': 'money', 'ok': true},
+        {
+          'label': 'Tunggakan Pokok',
+          'value': formatRupiah(credit.tunggakanPokok),
+          'icon': 'money',
+          'ok': credit.tunggakanPokok == '0' || credit.tunggakanPokok == null,
+        },
+        {
+          'label': 'Tunggakan Bunga',
+          'value': formatRupiah(credit.tunggakanBunga),
+          'icon': 'money',
+          'ok': credit.tunggakanBunga == '0' || credit.tunggakanBunga == null,
+        },
+        {
+          'label': 'Tunggakan Denda',
+          'value': formatRupiah(credit.tunggakanDenda),
+          'icon': 'money',
+          'ok': credit.tunggakanDenda == '0' || credit.tunggakanDenda == null,
+        },
+        {
+          'label': 'Tunggakan Hari',
+          'value': credit.tunggakanHari ?? '0',
+          'icon': 'time',
+          'ok': credit.tunggakanHari == '0' || credit.tunggakanHari == null,
+        },
       ],
     },
   ];
@@ -480,8 +638,7 @@ class _KreditTab extends StatelessWidget {
       key: const ValueKey('kredit'),
       padding: const EdgeInsets.all(16),
       children: _sections.map((section) {
-        final fields =
-            (section['fields'] as List).cast<Map<String, dynamic>>();
+        final fields = (section['fields'] as List).cast<Map<String, dynamic>>();
         return _SectionCard(
           header: section['header'] as String,
           child: Column(
@@ -520,8 +677,8 @@ class _KreditFieldRow extends StatelessWidget {
         return Icons.badge_outlined;
       case 'doc':
         return Icons.description_outlined;
-      case 'savings':
-        return Icons.savings_outlined;
+      case 'location':
+        return Icons.location_on_outlined;
       case 'money':
         return Icons.account_balance_wallet_outlined;
       case 'time':
@@ -532,8 +689,6 @@ class _KreditFieldRow extends StatelessWidget {
         return Icons.tune_outlined;
       case 'calendar':
         return Icons.calendar_month_outlined;
-      case 'progress':
-        return Icons.format_list_numbered_outlined;
       default:
         return Icons.info_outline;
     }
@@ -555,8 +710,8 @@ class _KreditFieldRow extends StatelessWidget {
               color: isOk
                   ? const Color(0xFF10B981).withValues(alpha: .1)
                   : isHighlight
-                      ? AppTheme.primaryColor.withValues(alpha: .08)
-                      : const Color(0xFFF1F3FB),
+                  ? AppTheme.primaryColor.withValues(alpha: .08)
+                  : const Color(0xFFF1F3FB),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -565,8 +720,8 @@ class _KreditFieldRow extends StatelessWidget {
               color: isOk
                   ? const Color(0xFF10B981)
                   : isHighlight
-                      ? AppTheme.primaryColor
-                      : AppTheme.textSecondary,
+                  ? AppTheme.primaryColor
+                  : AppTheme.textSecondary,
             ),
           ),
           const SizedBox(width: 12),
@@ -589,8 +744,8 @@ class _KreditFieldRow extends StatelessWidget {
                     color: isOk
                         ? const Color(0xFF10B981)
                         : isHighlight
-                            ? AppTheme.primaryColor
-                            : AppTheme.textPrimary,
+                        ? AppTheme.primaryColor
+                        : AppTheme.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -598,10 +753,9 @@ class _KreditFieldRow extends StatelessWidget {
               ],
             ),
           ),
-          if (isOk)
+          if (isOk && field['label'].toString().contains('Tunggakan'))
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: const Color(0xFF10B981).withValues(alpha: .1),
                 borderRadius: BorderRadius.circular(12),
@@ -621,20 +775,49 @@ class _KreditFieldRow extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Tab 2: Agunan
-// ─────────────────────────────────────────────────────────────
 class _AgunanTab extends StatelessWidget {
-  const _AgunanTab();
+  final List<CollateralModel> collaterals;
+  const _AgunanTab({required this.collaterals});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    if (collaterals.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.home_work_outlined,
+                size: 48,
+                color: AppTheme.textSecondary,
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Tidak Ada Data Agunan',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
       key: const ValueKey('agunan'),
       padding: const EdgeInsets.all(16),
-      children: [
-        _SectionCard(
-          header: 'Data Agunan',
+      itemCount: collaterals.length,
+      itemBuilder: (context, index) {
+        final col = collaterals[index];
+        final isSertifikat = col.nama.toUpperCase().contains('SERTIFIKAT');
+
+        return _SectionCard(
+          header: 'Agunan Ke-${index + 1}',
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: Column(
@@ -643,10 +826,11 @@ class _AgunanTab extends StatelessWidget {
                 // Type badge
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 5),
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
-                    color:
-                        AppTheme.primaryColor.withValues(alpha: .08),
+                    color: AppTheme.primaryColor.withValues(alpha: .08),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: AppTheme.primaryColor.withValues(alpha: .2),
@@ -655,12 +839,17 @@ class _AgunanTab extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.home_work_outlined,
-                          size: 13, color: AppTheme.primaryColor),
+                      Icon(
+                        isSertifikat
+                            ? Icons.home_work_outlined
+                            : Icons.description_outlined,
+                        size: 13,
+                        color: AppTheme.primaryColor,
+                      ),
                       const SizedBox(width: 5),
-                      const Text(
-                        'Tanah & Bangunan',
-                        style: TextStyle(
+                      Text(
+                        isSertifikat ? 'Tanah & Bangunan' : 'Dokumen Berharga',
+                        style: const TextStyle(
                           color: AppTheme.primaryColor,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -670,9 +859,9 @@ class _AgunanTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-                const Text(
-                  'SERTIFIKAT TANAH DAN BANGUNAN NO 610, LUAS 794 M2, ATAS NAMA ACAH CAHYATI, ALAMAT LEGONWETAN LEGONKULON SUBANG JAWA BARAT',
-                  style: TextStyle(
+                Text(
+                  col.nama.trim(),
+                  style: const TextStyle(
                     color: AppTheme.primaryColor,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -686,21 +875,23 @@ class _AgunanTab extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _AgunanChip(
-                        icon: Icons.map_outlined, label: 'Luas 794 m²'),
-                    _AgunanChip(
+                    if (col.noregAlt != null && col.noregAlt!.isNotEmpty)
+                      _AgunanChip(
                         icon: Icons.numbers_outlined,
-                        label: 'No. 610'),
-                    _AgunanChip(
-                        icon: Icons.location_on_outlined,
-                        label: 'Subang, Jawa Barat'),
+                        label: 'No. Reg: ${col.noregAlt}',
+                      ),
+                    if (col.nomorAlt != null && col.nomorAlt!.isNotEmpty)
+                      _AgunanChip(
+                        icon: Icons.link_outlined,
+                        label: 'Alt Norek: ${col.nomorAlt}',
+                      ),
                   ],
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -737,26 +928,55 @@ class _AgunanChip extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Tab 3: Penanganan (Accordion)
-// ─────────────────────────────────────────────────────────────
 class _PenangananTab extends StatelessWidget {
-  final List<Map<String, dynamic>> items;
+  final List<TaskModel> tasks;
+  final Set<int> expandedTaskIds;
   final ValueChanged<int> onToggle;
 
-  const _PenangananTab(
-      {super.key, required this.items, required this.onToggle});
+  const _PenangananTab({
+    super.key,
+    required this.tasks,
+    required this.expandedTaskIds,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (tasks.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.handshake_outlined,
+                size: 48,
+                color: AppTheme.textSecondary,
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Belum Ada Riwayat Penanganan',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView(
       key: const ValueKey('penanganan'),
       padding: const EdgeInsets.all(16),
       children: [
-        ...List.generate(items.length, (i) {
-          final item = items[i];
-          final isExpanded = item['isExpanded'] == true;
-          final hasDetail = item.containsKey('petugas');
+        ...List.generate(tasks.length, (i) {
+          final item = tasks[i];
+          final isExpanded = expandedTaskIds.contains(item.id);
+          final isSelesai = item.status == 'Selesai';
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -766,11 +986,10 @@ class _PenangananTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 border: isExpanded
                     ? Border.all(
-                        color:
-                            AppTheme.primaryColor.withValues(alpha: .25),
-                        width: 1.2)
-                    : Border.all(
-                        color: const Color(0xFFEEF0F6), width: 1),
+                        color: AppTheme.primaryColor.withValues(alpha: .25),
+                        width: 1.2,
+                      )
+                    : Border.all(color: const Color(0xFFEEF0F6), width: 1),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: .035),
@@ -783,12 +1002,14 @@ class _PenangananTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 child: Column(
                   children: [
-                    // Accordion header
+                    // Accordion Header
                     InkWell(
-                      onTap: () => onToggle(i),
+                      onTap: () => onToggle(item.id),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                         child: Row(
                           children: [
                             Container(
@@ -796,8 +1017,9 @@ class _PenangananTab extends StatelessWidget {
                               height: 34,
                               decoration: BoxDecoration(
                                 color: isExpanded
-                                    ? AppTheme.primaryColor
-                                        .withValues(alpha: .1)
+                                    ? AppTheme.primaryColor.withValues(
+                                        alpha: .1,
+                                      )
                                     : const Color(0xFFF1F3FB),
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -811,13 +1033,53 @@ class _PenangananTab extends StatelessWidget {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.tanggal ?? '-',
+                                    style: TextStyle(
+                                      color: isExpanded
+                                          ? AppTheme.primaryColor
+                                          : AppTheme.textPrimary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    item.jenis ?? 'Penanganan',
+                                    style: const TextStyle(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Status Badge
+                            Container(
+                              margin: const EdgeInsets.only(right: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelesai
+                                    ? const Color(
+                                        0xFF10B981,
+                                      ).withValues(alpha: .1)
+                                    : Colors.amber.withValues(alpha: .1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               child: Text(
-                                item['tanggal'],
+                                item.status ?? 'Proses',
                                 style: TextStyle(
-                                  color: isExpanded
-                                      ? AppTheme.primaryColor
-                                      : AppTheme.textPrimary,
-                                  fontSize: 13,
+                                  color: isSelesai
+                                      ? const Color(0xFF10B981)
+                                      : Colors.amber.shade800,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -837,22 +1099,10 @@ class _PenangananTab extends StatelessWidget {
                         ),
                       ),
                     ),
-
-                    // Expanded detail
+                    // Expanded Detail
                     AnimatedCrossFade(
                       firstChild: const SizedBox(width: double.infinity),
-                      secondChild: hasDetail
-                          ? _PenangananDetail(item: item)
-                          : const Padding(
-                              padding: EdgeInsets.fromLTRB(16, 0, 16, 14),
-                              child: Text(
-                                'Detail tidak tersedia.',
-                                style: TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
+                      secondChild: _PenangananDetail(item: item),
                       crossFadeState: isExpanded
                           ? CrossFadeState.showSecond
                           : CrossFadeState.showFirst,
@@ -870,11 +1120,16 @@ class _PenangananTab extends StatelessWidget {
 }
 
 class _PenangananDetail extends StatelessWidget {
-  final Map<String, dynamic> item;
+  final TaskModel item;
   const _PenangananDetail({required this.item});
 
   @override
   Widget build(BuildContext context) {
+    final hasTunggakan =
+        item.tunggakanPokok != null ||
+        item.tunggakanBunga != null ||
+        item.tunggakanDenda != null;
+
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       padding: const EdgeInsets.all(14),
@@ -885,14 +1140,19 @@ class _PenangananDetail extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Petugas chip
+          // Petugas ID / Maker info
           Row(
             children: [
-              const Icon(Icons.person_pin_circle_outlined,
-                  size: 14, color: AppTheme.primaryColor),
+              const Icon(
+                Icons.person_pin_circle_outlined,
+                size: 14,
+                color: AppTheme.primaryColor,
+              ),
               const SizedBox(width: 5),
               Text(
-                item['petugas'] ?? '',
+                item.executorId != null
+                    ? 'Petugas ID: ${item.executorId}'
+                    : 'Maker ID: ${item.makerId}',
                 style: const TextStyle(
                   color: AppTheme.primaryColor,
                   fontSize: 12,
@@ -903,76 +1163,68 @@ class _PenangananDetail extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _DetailBlock(
-              icon: Icons.task_alt_outlined,
-              title: 'Jenis Kegiatan',
-              content: item['jenis'] ?? ''),
-          _DetailBlock(
-              icon: Icons.home_outlined,
-              title: 'Follow Up',
-              content: item['fu'] ?? ''),
-          _DetailBlock(
-              icon: Icons.notes_outlined,
-              title: 'Catatan',
-              content: item['lainnya'] ?? ''),
-          const SizedBox(height: 10),
-          // Tunggakan row
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFEEF0F6)),
-            ),
-            child: Row(
-              children: [
-                _TunggakanBadge(
-                    label: 'Pokok',
-                    value: item['tunggakanPokok'] ?? '0'),
-                const SizedBox(width: 1),
-                Container(
-                    width: 1,
-                    height: 28,
-                    color: const Color(0xFFEEF0F6)),
-                const SizedBox(width: 1),
-                _TunggakanBadge(
-                    label: 'Bunga',
-                    value: item['tunggakanBunga'] ?? '0'),
-                const SizedBox(width: 1),
-                Container(
-                    width: 1,
-                    height: 28,
-                    color: const Color(0xFFEEF0F6)),
-                const SizedBox(width: 1),
-                _TunggakanBadge(
-                    label: 'Denda',
-                    value: item['tunggakanDenda'] ?? '0'),
-              ],
-            ),
+            icon: Icons.task_alt_outlined,
+            title: 'Jenis Kegiatan',
+            content: item.pelaksanaan ?? item.jenis ?? '-',
           ),
-          if (item.containsKey('catatan')) ...[
+          _DetailBlock(
+            icon: Icons.home_outlined,
+            title: 'Follow Up',
+            content: item.pelaksanaanDetail ?? '-',
+          ),
+          _DetailBlock(
+            icon: Icons.check_circle_outline,
+            title: 'Hasil Penanganan',
+            content: item.hasil ?? '-',
+          ),
+          _DetailBlock(
+            icon: Icons.notes_outlined,
+            title: 'Keterangan Hasil',
+            content: item.hasilDetail ?? '-',
+          ),
+          if (item.catatan != null && item.catatan!.isNotEmpty)
+            _DetailBlock(
+              icon: Icons.chat_bubble_outline,
+              title: 'Catatan Maker',
+              content: item.catatan!,
+            ),
+          if (hasTunggakan) ...[
             const SizedBox(height: 10),
+            // Tunggakan Row
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF8E1),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFFFE082)),
+                border: Border.all(color: const Color(0xFFEEF0F6)),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.sticky_note_2_outlined,
-                      size: 14, color: Color(0xFFF59E0B)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      item['catatan'],
-                      style: const TextStyle(
-                        color: Color(0xFF92400E),
-                        fontSize: 11,
-                        height: 1.5,
-                      ),
-                    ),
+                  _TunggakanBadge(
+                    label: 'Pokok',
+                    value: item.tunggakanPokok ?? '0',
+                  ),
+                  const SizedBox(width: 1),
+                  Container(
+                    width: 1,
+                    height: 28,
+                    color: const Color(0xFFEEF0F6),
+                  ),
+                  const SizedBox(width: 1),
+                  _TunggakanBadge(
+                    label: 'Bunga',
+                    value: item.tunggakanBunga ?? '0',
+                  ),
+                  const SizedBox(width: 1),
+                  Container(
+                    width: 1,
+                    height: 28,
+                    color: const Color(0xFFEEF0F6),
+                  ),
+                  const SizedBox(width: 1),
+                  _TunggakanBadge(
+                    label: 'Denda',
+                    value: item.tunggakanDenda ?? '0',
                   ),
                 ],
               ),
@@ -988,8 +1240,11 @@ class _DetailBlock extends StatelessWidget {
   final IconData icon;
   final String title;
   final String content;
-  const _DetailBlock(
-      {required this.icon, required this.title, required this.content});
+  const _DetailBlock({
+    required this.icon,
+    required this.title,
+    required this.content,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1037,16 +1292,13 @@ class _TunggakanBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isZero = value == '0' || value == 'Rp 0';
+    final isZero = value == '0' || value == 'Rp 0' || value == '0.00';
     return Expanded(
       child: Column(
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 10,
-            ),
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10),
           ),
           const SizedBox(height: 3),
           Text(
@@ -1063,9 +1315,6 @@ class _TunggakanBadge extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Section Card wrapper
-// ─────────────────────────────────────────────────────────────
 class _SectionCard extends StatelessWidget {
   final String header;
   final Widget child;
@@ -1090,10 +1339,8 @@ class _SectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section header
             Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
               child: Row(
                 children: [
                   Container(
@@ -1117,10 +1364,7 @@ class _SectionCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Divider(
-                height: 1,
-                thickness: 0.8,
-                color: Color(0xFFEEF0F6)),
+            const Divider(height: 1, thickness: 0.8, color: Color(0xFFEEF0F6)),
             child,
           ],
         ),

@@ -2,6 +2,7 @@ import 'package:bangunarta_portal/features/samba/screens/open_account_screen.dar
 import 'package:flutter/material.dart';
 import 'package:bangunarta_portal/core/auth/auth_provider.dart';
 import 'package:bangunarta_portal/core/navigation/navigation_service.dart';
+import 'package:bangunarta_portal/core/network/dio_client.dart';
 import 'package:bangunarta_portal/features/auth/screens/login_screen.dart';
 import 'package:bangunarta_portal/features/helpdesk/screens/home_screen.dart';
 import 'package:bangunarta_portal/features/samba/screens/detail_rekening.dart';
@@ -19,6 +20,7 @@ import 'package:bangunarta_portal/features/simontok/screens/buat_laporan_screen.
 import 'package:bangunarta_portal/features/simontok/screens/detail_kredit_screen.dart';
 import 'package:bangunarta_portal/features/simontok/screens/detail_prospek_screen.dart';
 import 'package:bangunarta_portal/features/simontok/screens/home_screen.dart';
+import 'package:bangunarta_portal/models/simontok/list_tugas_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,6 +38,11 @@ class _AuthChangeNotifier extends ChangeNotifier {
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = _AuthChangeNotifier(ref);
+
+  // Set the unauthorized callback to update authProvider state
+  DioClient.instance.onUnauthorized = () {
+    ref.read(authProvider.notifier).forceUnauthenticated();
+  };
 
   return GoRouter(
     navigatorKey: NavigationService.navigatorKey,
@@ -115,7 +122,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'buat-laporan',
-            builder: (context, state) => const BuatLaporanScreen(),
+            builder: (context, state) {
+              final task = state.extra as TugasModel;
+              return BuatLaporanScreen(task: task);
+            },
           ),
           GoRoute(
             path: 'detail-prospek',
