@@ -20,7 +20,9 @@ import 'package:bangunarta_portal/features/simontok/screens/buat_laporan_screen.
 import 'package:bangunarta_portal/features/simontok/screens/detail_kredit_screen.dart';
 import 'package:bangunarta_portal/features/simontok/screens/detail_prospek_screen.dart';
 import 'package:bangunarta_portal/features/simontok/screens/home_screen.dart';
+import 'package:bangunarta_portal/features/simontok/screens/tambah_prospek_screen.dart';
 import 'package:bangunarta_portal/models/simontok/list_tugas_model.dart';
+import 'package:bangunarta_portal/models/simontok/list_prospek_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -130,8 +132,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'detail-prospek',
             builder: (context, state) {
-              final name = state.extra as String;
-              return DetailProspekScreen(namaDebitur: name);
+              final id = state.extra as int;
+              return DetailProspekScreen(prospekId: id);
+            },
+          ),
+          GoRoute(
+            path: 'tambah-prospek',
+            builder: (context, state) {
+              final prospek = state.extra as ProspekModel?;
+              return TambahProspekScreen(prospek: prospek);
             },
           ),
         ],

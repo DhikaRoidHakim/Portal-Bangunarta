@@ -33,7 +33,14 @@ class DetailPinjamanData {
   factory DetailPinjamanData.fromJson(Map<String, dynamic> json) {
     final creditJson = json['credit'];
     final collsJson = json['collaterals'] as List?;
-    final tasksJson = json['tasks'] as List?;
+    
+    List? tasksList;
+    final tasksJson = json['tasks'];
+    if (tasksJson is List) {
+      tasksList = tasksJson;
+    } else if (tasksJson is Map<String, dynamic>) {
+      tasksList = tasksJson['data'] as List?;
+    }
 
     return DetailPinjamanData(
       credit: CreditDetailModel.fromJson(
@@ -46,8 +53,8 @@ class DetailPinjamanData {
               .map((item) => CollateralModel.fromJson(item as Map<String, dynamic>))
               .toList()
           : const [],
-      tasks: tasksJson != null
-          ? tasksJson
+      tasks: tasksList != null
+          ? tasksList
               .map((item) => TaskModel.fromJson(item as Map<String, dynamic>))
               .toList()
           : const [],

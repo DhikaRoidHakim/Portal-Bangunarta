@@ -30,6 +30,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
   late final TextEditingController _janjiBayarController;
   String? _selectedHasil = 'Lainnya';
   String? _selectedPelaksanaan = 'Penagihan Kredit';
+  String? _selectedKlasifikasi;
 
   // Controller untuk form Verifikasi Pinjaman
   late final TextEditingController _penggunaKreditController;
@@ -64,21 +65,66 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
   void initState() {
     super.initState();
 
-    _keteranganPelaksanaanController = TextEditingController();
-    _keteranganHasilController = TextEditingController();
-    _janjiBayarController = TextEditingController();
+    _keteranganPelaksanaanController = TextEditingController(
+      text: widget.task.pelaksanaanDetail,
+    );
+    _keteranganHasilController = TextEditingController(
+      text: widget.task.hasilDetail,
+    );
+    _janjiBayarController = TextEditingController(text: widget.task.janjiBayar);
+
+    // Initial select values
+    if (widget.task.pelaksanaan != null &&
+        widget.task.pelaksanaan!.isNotEmpty) {
+      _selectedPelaksanaan = widget.task.pelaksanaan;
+    }
+    if (widget.task.hasil != null && widget.task.hasil!.isNotEmpty) {
+      _selectedHasil = widget.task.hasil;
+    }
+    if (widget.task.klasifikasi != null &&
+        widget.task.klasifikasi!.isNotEmpty) {
+      _selectedKlasifikasi = widget.task.klasifikasi;
+    }
+
+    // Determine verifikasi sub-type
+    if (widget.task.kondisiJaminan != null &&
+        widget.task.kondisiJaminan!.isNotEmpty) {
+      _verifikasiType = 'Jaminan';
+    }
+
+    // Inisialisasi verifikasi pinjaman
+    _penggunaKreditController = TextEditingController(
+      text: widget.task.penggunaKredit,
+    );
+    _penggunaanKreditController = TextEditingController(
+      text: widget.task.penggunaanKredit,
+    );
+    _alamatDebiturController = TextEditingController(
+      text: widget.task.alamatDebitur,
+    );
+    _caraPembayaranController = TextEditingController(
+      text: widget.task.caraPembayaran,
+    );
+    _pekerjaanDebiturController = TextEditingController(
+      text: widget.task.pekerjaanDebitur,
+    );
+    _karakterDebiturController = TextEditingController(
+      text: widget.task.karakterDebitur,
+    );
+    _nomorDebiturController = TextEditingController(
+      text: widget.task.nomorDebitur,
+    );
+    _nomorPendampingController = TextEditingController(
+      text: widget.task.nomorPendamping,
+    );
 
     // Inisialisasi verifikasi jaminan
-    _penggunaKreditController = TextEditingController();
-    _penggunaanKreditController = TextEditingController();
-    _alamatDebiturController = TextEditingController();
-    _caraPembayaranController = TextEditingController();
-    _pekerjaanDebiturController = TextEditingController();
-    _karakterDebiturController = TextEditingController();
-    _nomorDebiturController = TextEditingController();
-    _nomorPendampingController = TextEditingController();
-    _kondisiJaminanController = TextEditingController();
-    _penguasaanJaminanController = TextEditingController();
+    _kondisiJaminanController = TextEditingController(
+      text: widget.task.kondisiJaminan,
+    );
+    _penguasaanJaminanController = TextEditingController(
+      text: widget.task.penguasaanJaminan,
+    );
   }
 
   @override
@@ -153,7 +199,10 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
       return;
     }
 
-    if (_selectedImage == null) {
+    final detailTugas = ref.read(detailTugasProvider(widget.task.id)).value?.data ?? widget.task;
+
+    if (_selectedImage == null &&
+        (detailTugas.foto == null || detailTugas.foto!.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Foto penanganan wajib dilampirkan'),
@@ -168,7 +217,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
     });
 
     try {
-      final isPenagihan = widget.task.jenis == 'Penagihan';
+      final isPenagihan = detailTugas.jenis == 'Penagihan';
       if (isPenagihan) {
         await SimontokRepository.instance.submitPenagihanReport(
           taskId: widget.task.id,
@@ -177,7 +226,8 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
           hasilPelaksanaan: _selectedHasil ?? 'Lainnya',
           keteranganHasil: _keteranganHasilController.text.trim(),
           janjiBayar: _janjiBayarController.text.trim(),
-          fotoPenanganan: _selectedImage!,
+          fotoPenanganan: _selectedImage,
+          klasifikasi: _selectedKlasifikasi ?? '',
         );
       } else if (_verifikasiType == 'Pinjaman') {
         await SimontokRepository.instance.submitVerifikasiReport(
@@ -190,14 +240,15 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
           karakterDebitur: _karakterDebiturController.text.trim(),
           nomorDebitur: _nomorDebiturController.text.trim(),
           nomorPendamping: _nomorPendampingController.text.trim(),
-          fotoPenanganan: _selectedImage!,
+          fotoPenanganan: _selectedImage,
+          klasifikasi: _selectedKlasifikasi ?? '',
         );
       } else {
         await SimontokRepository.instance.submitVerifikasiJaminanReport(
           taskId: widget.task.id,
           kondisiJaminan: _kondisiJaminanController.text.trim(),
           penguasaanJaminan: _penguasaanJaminanController.text.trim(),
-          fotoPenanganan: _selectedImage!,
+          fotoPenanganan: _selectedImage,
         );
       }
 
@@ -353,11 +404,10 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
                                 _requiredValidator(val, 'Keterangan Hasil'),
                           ),
                           _buildDateField(
-                            label: 'Janji Bayar',
+                            label: 'Janji Bayar (Optional)',
                             controller: _janjiBayarController,
-                            validator: (val) =>
-                                _requiredValidator(val, 'Janji Bayar'),
                           ),
+                          _buildKlasifikasiDropdown(),
                         ] else if (_verifikasiType == 'Pinjaman') ...[
                           _buildFormField(
                             label: 'Pengguna Kredit',
@@ -411,6 +461,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
                             validator: (val) =>
                                 _requiredValidator(val, 'Nomor Pendamping'),
                           ),
+                          _buildKlasifikasiDropdown(),
                         ] else ...[
                           _buildFormField(
                             label: 'Kondisi Jaminan',
@@ -703,6 +754,72 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
     );
   }
 
+  Widget _buildKlasifikasiDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Klasifikasi *',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.primaryColor.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(height: 4),
+        DropdownButtonFormField<String>(
+          initialValue: _selectedKlasifikasi,
+          hint: const Text(
+            'Pilih Klasifikasi',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          items: const [
+            DropdownMenuItem(value: 'DM', child: Text('Debitur Mudah')),
+            DropdownMenuItem(
+              value: 'DPP',
+              child: Text('Debitur Perlu Pengingat'),
+            ),
+            DropdownMenuItem(value: 'DS', child: Text('Debitur Sulit')),
+            DropdownMenuItem(value: 'DSS', child: Text('Debitur Sangat Sulit')),
+            DropdownMenuItem(
+              value: 'DTT',
+              child: Text('Debitur Tidak Tertagih'),
+            ),
+          ],
+          onChanged: (val) {
+            setState(() {
+              _selectedKlasifikasi = val;
+            });
+          },
+          validator: (val) {
+            if (val == null || val.isEmpty) {
+              return 'Klasifikasi tidak boleh kosong';
+            }
+            return null;
+          },
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            isDense: true,
+          ),
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppTheme.textPrimary.withValues(alpha: 0.5),
+          ),
+          isExpanded: true,
+          dropdownColor: Colors.white,
+        ),
+        const SizedBox(height: 8),
+        Divider(color: Colors.grey.shade200, height: 1),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   Widget _buildDateField({
     required String label,
     required TextEditingController controller,
@@ -758,6 +875,9 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
   }
 
   Widget _buildPhotoPicker() {
+    final detailTugasAsync = ref.watch(detailTugasProvider(widget.task.id));
+    final currentTask = detailTugasAsync.value?.data ?? widget.task;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -803,6 +923,81 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
                     ),
                   ),
                 ),
+              ),
+            ],
+          )
+        else if (currentTask.foto != null && currentTask.foto!.isNotEmpty)
+          Column(
+            children: [
+              Container(
+                width: double.infinity,
+                height: 220,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(11),
+                  child: Image.network(
+                    currentTask.foto!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey.shade100,
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.image_not_supported_outlined,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Gagal memuat foto dari server',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _pickImage(ImageSource.camera),
+                    icon: const Icon(Icons.camera_alt, size: 16),
+                    label: const Text('Ganti Foto (Kamera)'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => _pickImage(ImageSource.gallery),
+                    icon: const Icon(Icons.image, size: 16),
+                    label: const Text('Galeri'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.primaryColor,
+                      side: const BorderSide(color: AppTheme.primaryColor),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           )

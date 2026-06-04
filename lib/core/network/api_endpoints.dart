@@ -19,4 +19,6 @@ class ApiEndpoints {
   static const String submitPenagihan = '/api/simontok/tugas/';
   static const String submitVerifikasi = '/api/simontok/verifikasi-pinjaman/';
   static const String submitVerifikasiJaminan = '/api/simontok/verifikasi-jaminan/';
+  static const String listProspek = '/api/simontok/prospek';
+  static const String detailProspek = '/api/simontok/prospek/';
 }
