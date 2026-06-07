@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
+            VALUE "CompanyName", "com.bangunarta" "\0"
             VALUE "FileDescription", "bangunarta_portal" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "bangunarta_portal" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.bangunarta. All rights reserved." "\0"
             VALUE "OriginalFilename", "bangunarta_portal.exe" "\0"
             VALUE "ProductName", "bangunarta_portal" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

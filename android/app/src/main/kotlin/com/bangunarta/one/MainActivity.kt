@@ -1,4 +1,4 @@
-package com.example.bangunarta_portal
+package com.bangunarta.one
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
@@ -73,7 +72,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
     );
     _janjiBayarController = TextEditingController(text: widget.task.janjiBayar);
 
-    // Initial select values
+    // Inisialisasi select values
     if (widget.task.pelaksanaan != null &&
         widget.task.pelaksanaan!.isNotEmpty) {
       _selectedPelaksanaan = widget.task.pelaksanaan;
@@ -86,45 +85,25 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
       _selectedKlasifikasi = widget.task.klasifikasi;
     }
 
-    // Determine verifikasi sub-type
-    if (widget.task.kondisiJaminan != null &&
-        widget.task.kondisiJaminan!.isNotEmpty) {
+    // Inisialisasi sub-type
+    if (widget.task.pelaksanaan != null &&
+        widget.task.pelaksanaan!.toLowerCase().contains('jaminan')) {
       _verifikasiType = 'Jaminan';
     }
 
     // Inisialisasi verifikasi pinjaman
-    _penggunaKreditController = TextEditingController(
-      text: widget.task.penggunaKredit,
-    );
-    _penggunaanKreditController = TextEditingController(
-      text: widget.task.penggunaanKredit,
-    );
-    _alamatDebiturController = TextEditingController(
-      text: widget.task.alamatDebitur,
-    );
-    _caraPembayaranController = TextEditingController(
-      text: widget.task.caraPembayaran,
-    );
-    _pekerjaanDebiturController = TextEditingController(
-      text: widget.task.pekerjaanDebitur,
-    );
-    _karakterDebiturController = TextEditingController(
-      text: widget.task.karakterDebitur,
-    );
-    _nomorDebiturController = TextEditingController(
-      text: widget.task.nomorDebitur,
-    );
-    _nomorPendampingController = TextEditingController(
-      text: widget.task.nomorPendamping,
-    );
+    _penggunaKreditController = TextEditingController();
+    _penggunaanKreditController = TextEditingController();
+    _alamatDebiturController = TextEditingController();
+    _caraPembayaranController = TextEditingController();
+    _pekerjaanDebiturController = TextEditingController();
+    _karakterDebiturController = TextEditingController();
+    _nomorDebiturController = TextEditingController();
+    _nomorPendampingController = TextEditingController();
 
     // Inisialisasi verifikasi jaminan
-    _kondisiJaminanController = TextEditingController(
-      text: widget.task.kondisiJaminan,
-    );
-    _penguasaanJaminanController = TextEditingController(
-      text: widget.task.penguasaanJaminan,
-    );
+    _kondisiJaminanController = TextEditingController();
+    _penguasaanJaminanController = TextEditingController();
   }
 
   @override
@@ -199,9 +178,14 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
       return;
     }
 
-    final detailTugas = ref.read(detailTugasProvider(widget.task.id)).value?.data ?? widget.task;
+    final detailTugas =
+        ref.read(detailTugasProvider(widget.task.id)).value?.data ??
+        widget.task;
+    final isPenagihan = detailTugas.jenis == 'Penagihan';
+    final showPhotoPicker = isPenagihan || _verifikasiType == 'Pinjaman';
 
-    if (_selectedImage == null &&
+    if (showPhotoPicker &&
+        _selectedImage == null &&
         (detailTugas.foto == null || detailTugas.foto!.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -217,7 +201,6 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
     });
 
     try {
-      final isPenagihan = detailTugas.jenis == 'Penagihan';
       if (isPenagihan) {
         await SimontokRepository.instance.submitPenagihanReport(
           taskId: widget.task.id,
@@ -248,7 +231,6 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
           taskId: widget.task.id,
           kondisiJaminan: _kondisiJaminanController.text.trim(),
           penguasaanJaminan: _penguasaanJaminanController.text.trim(),
-          fotoPenanganan: _selectedImage,
         );
       }
 
@@ -478,9 +460,13 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
                                 _requiredValidator(val, 'Penguasaan Jaminan'),
                           ),
                         ],
-                        const SizedBox(height: 8),
-                        _buildPhotoPicker(),
-                        const SizedBox(height: 28),
+                        if (isPenagihan || _verifikasiType == 'Pinjaman') ...[
+                          const SizedBox(height: 8),
+                          _buildPhotoPicker(),
+                          const SizedBox(height: 28),
+                        ] else ...[
+                          const SizedBox(height: 16),
+                        ],
                         SizedBox(
                           width: double.infinity,
                           height: 48,

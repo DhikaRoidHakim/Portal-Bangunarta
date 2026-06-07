@@ -274,38 +274,14 @@ class SimontokRepository {
     required int taskId,
     required String kondisiJaminan,
     required String penguasaanJaminan,
-    File? fotoPenanganan,
   }) async {
     try {
-      MultipartFile? multipartFile;
-      if (fotoPenanganan != null) {
-        final originalFileName = fotoPenanganan.path.split('/').last;
-        final fileExtension = originalFileName.split('.').last.toLowerCase();
-        final fileName = '$taskId.$fileExtension';
-        String mimeType = 'image/jpeg';
-        if (fileExtension == 'png') {
-          mimeType = 'image/png';
-        } else if (fileExtension == 'gif') {
-          mimeType = 'image/gif';
-        } else if (fileExtension == 'webp') {
-          mimeType = 'image/webp';
-        }
-        multipartFile = await MultipartFile.fromFile(
-          fotoPenanganan.path,
-          filename: fileName,
-          contentType: MediaType.parse(mimeType),
-        );
-      }
-
-      final formData = FormData.fromMap({
-        'kondisi_jaminan': kondisiJaminan,
-        'penguasaan_jaminan': penguasaanJaminan,
-        if (multipartFile != null) 'foto_penanganan': multipartFile,
-      });
-
       final response = await DioClient.instance.dio.post(
         '${ApiEndpoints.submitVerifikasiJaminan}$taskId',
-        data: formData,
+        data: {
+          'kondisi_jaminan': kondisiJaminan,
+          'penguasaan_jaminan': penguasaanJaminan,
+        },
       );
 
       final responseData = response.data;

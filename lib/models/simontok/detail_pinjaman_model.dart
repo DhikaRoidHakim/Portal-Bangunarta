@@ -230,7 +230,7 @@ class TaskModel {
       id: json['id'] as int? ?? 0,
       kode: json['kode']?.toString(),
       nomorRekening: json['nomor_rekening']?.toString(),
-      namaLengkap: json['nama_lengkap']?.toString() ?? '',
+      namaLengkap: json['nama_debitur']?.toString() ?? json['nama_lengkap']?.toString() ?? '',
       tanggal: json['tanggal']?.toString(),
       jenis: json['jenis']?.toString(),
       pelaksanaan: json['pelaksanaan']?.toString(),

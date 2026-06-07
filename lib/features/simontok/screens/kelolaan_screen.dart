@@ -53,10 +53,10 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
     });
   }
 
+  
   @override
   Widget build(BuildContext context) {
     final listPinjamanAsync = ref.watch(listPinjamanProvider);
-
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
       appBar: AppBar(

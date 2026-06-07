@@ -16,7 +16,11 @@ class ListTugasModel {
     return ListTugasModel(
       success: json['success'] as bool? ?? false,
       data: list != null
-          ? list.map((item) => TugasModel.fromJson(item as Map<String, dynamic>)).toList()
+          ? list
+                .map(
+                  (item) => TugasModel.fromJson(item as Map<String, dynamic>),
+                )
+                .toList()
           : const [],
       nextCursor: json['next_cursor']?.toString(),
       hasMore: json['has_more'] as bool? ?? false,
@@ -49,18 +53,6 @@ class TugasModel {
   final String? updatedAt;
   final String? deletedAt;
 
-  // Verifikasi report fields
-  final String? penggunaKredit;
-  final String? penggunaanKredit;
-  final String? alamatDebitur;
-  final String? caraPembayaran;
-  final String? pekerjaanDebitur;
-  final String? karakterDebitur;
-  final String? nomorDebitur;
-  final String? nomorPendamping;
-  final String? kondisiJaminan;
-  final String? penguasaanJaminan;
-
   const TugasModel({
     required this.id,
     this.kode,
@@ -85,16 +77,6 @@ class TugasModel {
     this.createdAt,
     this.updatedAt,
     this.deletedAt,
-    this.penggunaKredit,
-    this.penggunaanKredit,
-    this.alamatDebitur,
-    this.caraPembayaran,
-    this.pekerjaanDebitur,
-    this.karakterDebitur,
-    this.nomorDebitur,
-    this.nomorPendamping,
-    this.kondisiJaminan,
-    this.penguasaanJaminan,
   });
 
   factory TugasModel.fromJson(Map<String, dynamic> json) {
@@ -102,7 +84,7 @@ class TugasModel {
       id: json['id'] as int? ?? 0,
       kode: json['kode']?.toString(),
       nomorRekening: json['nomor_rekening']?.toString(),
-      namaLengkap: json['nama_lengkap']?.toString() ?? '',
+      namaLengkap: json['nama_debitur']?.toString() ?? json['nama_lengkap']?.toString() ?? '',
       tanggal: json['tanggal']?.toString(),
       jenis: json['jenis']?.toString(),
       pelaksanaan: json['pelaksanaan']?.toString(),
@@ -122,16 +104,6 @@ class TugasModel {
       createdAt: json['created_at']?.toString(),
       updatedAt: json['updated_at']?.toString(),
       deletedAt: json['deleted_at']?.toString(),
-      penggunaKredit: json['pengguna_kredit']?.toString(),
-      penggunaanKredit: json['penggunaan_kredit']?.toString(),
-      alamatDebitur: json['alamat_debitur']?.toString(),
-      caraPembayaran: json['cara_pembayaran']?.toString(),
-      pekerjaanDebitur: json['pekerjaan_debitur']?.toString(),
-      karakterDebitur: json['karakter_debitur']?.toString(),
-      nomorDebitur: json['nomor_debitur']?.toString(),
-      nomorPendamping: json['nomor_pendamping']?.toString(),
-      kondisiJaminan: json['kondisi_jaminan']?.toString(),
-      penguasaanJaminan: json['penguasaan_jaminan']?.toString(),
     );
   }
 
