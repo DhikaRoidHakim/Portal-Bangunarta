@@ -499,7 +499,9 @@ class _TambahProspekScreenState extends ConsumerState<TambahProspekScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(11),
                   child: Image.network(
-                    '${ApiEndpoints.baseUrl}/storage/simontok/prospek/$serverFoto',
+                    serverFoto.startsWith('http')
+                        ? serverFoto
+                        : '${ApiEndpoints.baseUrl}/storage/simontok/prospek/$serverFoto',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(

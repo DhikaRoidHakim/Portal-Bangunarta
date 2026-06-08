@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:bangunarta_portal/core/network/api_endpoints.dart';
 import 'package:bangunarta_portal/features/simontok/providers/simontok_provider.dart';
 import 'package:bangunarta_portal/models/simontok/detail_prospek_model.dart';
 
@@ -197,7 +198,9 @@ class _DetailProspekScreenState extends ConsumerState<DetailProspekScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(11),
                 child: Image.network(
-                  data.foto!,
+                  data.foto!.startsWith('http')
+                      ? data.foto!
+                      : '${ApiEndpoints.baseUrl}/storage/simontok/prospek/${data.foto!}',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(

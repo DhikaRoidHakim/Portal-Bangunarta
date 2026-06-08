@@ -54,7 +54,7 @@ class SimontokRepository {
   Future<DetailPinjamanModel> getDetailPinjaman(String nomorRekening) async {
     try {
       final response = await DioClient.instance.dio.get(
-        '${ApiEndpoints.detailPinjaman}$nomorRekening',
+        '${ApiEndpoints.detailPinjaman}/$nomorRekening',
       );
 
       final responseData = response.data;
@@ -188,7 +188,7 @@ class SimontokRepository {
       });
 
       final response = await DioClient.instance.dio.post(
-        '${ApiEndpoints.submitPenagihan}$taskId',
+        '${ApiEndpoints.submitPenagihan}/$taskId',
         data: formData,
       );
 
@@ -252,8 +252,12 @@ class SimontokRepository {
         if (multipartFile != null) 'foto_penanganan': multipartFile,
       });
 
+      // final requestUrl = '${DioClient.instance.dio.options.baseUrl}${ApiEndpoints.submitVerifikasi}/$taskId';
+      // print('DEBUG SIMONTOK - Request URL: $requestUrl');
+      // print('DEBUG SIMONTOK - Form Data fields: ${formData.fields.map((e) => "${e.key}: ${e.value}")}');
+
       final response = await DioClient.instance.dio.post(
-        '${ApiEndpoints.submitVerifikasi}$taskId',
+        '${ApiEndpoints.submitVerifikasi}/$taskId',
         data: formData,
       );
 
@@ -271,16 +275,23 @@ class SimontokRepository {
 
   /// Submit laporan dengan tipe verifikasi (jaminan)
   Future<SubmitLaporanResponseModel> submitVerifikasiJaminanReport({
-    required int taskId,
+    required String nomorAgunan,
     required String kondisiJaminan,
     required String penguasaanJaminan,
   }) async {
     try {
+      // final requestUrl =
+      //     '${DioClient.instance.dio.options.baseUrl}${ApiEndpoints.submitVerifikasiJaminan}/$nomorAgunan';
+      // print('DEBUG SIMONTOK - Request URL: $requestUrl');
+      // print(
+      //   'DEBUG SIMONTOK - Jaminan Data: kondisi_jaminan: $kondisiJaminan, penguasaan_jaminan: $penguasaanJaminan',
+      // );
+
       final response = await DioClient.instance.dio.post(
-        '${ApiEndpoints.submitVerifikasiJaminan}$taskId',
+        '${ApiEndpoints.submitVerifikasiJaminan}/$nomorAgunan',
         data: {
-          'kondisi_jaminan': kondisiJaminan,
-          'penguasaan_jaminan': penguasaanJaminan,
+          'kondisi_agunan': kondisiJaminan,
+          'penguasaan_agunan': penguasaanJaminan,
         },
       );
 
@@ -437,7 +448,7 @@ class SimontokRepository {
   Future<DetailProspekModel> getDetailProspek(int id) async {
     try {
       final response = await DioClient.instance.dio.get(
-        '${ApiEndpoints.detailProspek}$id',
+        '${ApiEndpoints.detailProspek}/$id',
       );
 
       final responseData = response.data;
@@ -464,7 +475,7 @@ class SimontokRepository {
   Future<DetailTugasModel> getDetailTugas(int id) async {
     try {
       final response = await DioClient.instance.dio.get(
-        '${ApiEndpoints.submitPenagihan}$id',
+        '${ApiEndpoints.submitPenagihan}/$id',
       );
 
       final responseData = response.data;

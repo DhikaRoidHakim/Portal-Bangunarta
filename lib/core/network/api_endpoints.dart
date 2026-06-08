@@ -1,7 +1,7 @@
 class ApiEndpoints {
-  static const bool isProduction = true;
+  static const bool isProduction = false;
 
-  static const String devBaseUrl = 'http://192.168.2.9:8000';
+  static const String devBaseUrl = 'https://codex.stg.pba.co.id';
   static const String prodBaseUrl = 'https://codex.bprbangunarta.co.id';
 
   static String get baseUrl => isProduction ? prodBaseUrl : devBaseUrl;
@@ -14,11 +14,12 @@ class ApiEndpoints {
 
   // Endpoints Simontok
   static const String listPinjaman = '/api/simontok/pinjaman';
-  static const String detailPinjaman = '/api/simontok/pinjaman/';
+  static const String detailPinjaman = '/api/simontok/pinjaman';
   static const String listTugas = '/api/simontok/tugas';
-  static const String submitPenagihan = '/api/simontok/tugas/';
-  static const String submitVerifikasi = '/api/simontok/verifikasi-pinjaman/';
-  static const String submitVerifikasiJaminan = '/api/simontok/verifikasi-jaminan/';
+  static const String submitPenagihan = '/api/simontok/tugas';
+  static const String submitVerifikasi = '/api/simontok/verifikasi-pinjaman';
+  static const String submitVerifikasiJaminan =
+      '/api/simontok/verifikasi-jaminan';
   static const String listProspek = '/api/simontok/prospek';
-  static const String detailProspek = '/api/simontok/prospek/';
+  static const String detailProspek = '/api/simontok/prospek';
 }

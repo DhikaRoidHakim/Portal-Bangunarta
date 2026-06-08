@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/models/simontok/list_tugas_model.dart';
+import 'package:bangunarta_portal/models/simontok/detail_tugas_model.dart';
 import 'package:bangunarta_portal/features/simontok/providers/simontok_provider.dart';
 import 'package:bangunarta_portal/features/simontok/providers/simontok_repository.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,6 +23,8 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
 
   // Verifikasi sub tipe (Pinjaman / Jaminan)
   String _verifikasiType = 'Pinjaman';
+  DetailCollateralModel? _selectedCollateral;
+  List<DetailCollateralModel> _collaterals = [];
 
   // Controler untuk form Penagihan
   late final TextEditingController _keteranganPelaksanaanController;
@@ -104,6 +107,84 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
     // Inisialisasi verifikasi jaminan
     _kondisiJaminanController = TextEditingController();
     _penguasaanJaminanController = TextEditingController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final cached = ref.read(detailTugasProvider(widget.task.id)).value;
+        if (cached != null) {
+          _populateControllers(cached.data.task, cached.data.collaterals);
+        }
+      }
+    });
+  }
+
+  void _populateControllers(DetailTaskModel taskDetail, List<DetailCollateralModel> colls) {
+    if (taskDetail.penggunaKredit != null && _penggunaKreditController.text.isEmpty) {
+      _penggunaKreditController.text = taskDetail.penggunaKredit!;
+    }
+    if (taskDetail.penggunaanKredit != null && _penggunaanKreditController.text.isEmpty) {
+      _penggunaanKreditController.text = taskDetail.penggunaanKredit!;
+    }
+    if (taskDetail.alamatDebitur != null && _alamatDebiturController.text.isEmpty) {
+      _alamatDebiturController.text = taskDetail.alamatDebitur!;
+    }
+    if (taskDetail.caraPembayaran != null && _caraPembayaranController.text.isEmpty) {
+      _caraPembayaranController.text = taskDetail.caraPembayaran!;
+    }
+    if (taskDetail.pekerjaanDebitur != null && _pekerjaanDebiturController.text.isEmpty) {
+      _pekerjaanDebiturController.text = taskDetail.pekerjaanDebitur!;
+    }
+    if (taskDetail.karakterDebitur != null && _karakterDebiturController.text.isEmpty) {
+      _karakterDebiturController.text = taskDetail.karakterDebitur!;
+    }
+    if (taskDetail.nomorDebitur != null && _nomorDebiturController.text.isEmpty) {
+      _nomorDebiturController.text = taskDetail.nomorDebitur!;
+    }
+    if (taskDetail.nomorPendamping != null && _nomorPendampingController.text.isEmpty) {
+      _nomorPendampingController.text = taskDetail.nomorPendamping!;
+    }
+
+    if (taskDetail.pelaksanaanDetail != null && _keteranganPelaksanaanController.text.isEmpty) {
+      _keteranganPelaksanaanController.text = taskDetail.pelaksanaanDetail!;
+    }
+    if (taskDetail.hasilDetail != null && _keteranganHasilController.text.isEmpty) {
+      _keteranganHasilController.text = taskDetail.hasilDetail!;
+    }
+    if (taskDetail.janjiBayar != null && _janjiBayarController.text.isEmpty) {
+      _janjiBayarController.text = taskDetail.janjiBayar!;
+    }
+
+    if (taskDetail.pelaksanaan != null && (_selectedPelaksanaan == null || _selectedPelaksanaan == 'Penagihan Kredit')) {
+      setState(() {
+        _selectedPelaksanaan = taskDetail.pelaksanaan;
+      });
+    }
+    if (taskDetail.hasil != null && (_selectedHasil == null || _selectedHasil == 'Lainnya')) {
+      setState(() {
+        _selectedHasil = taskDetail.hasil;
+      });
+    }
+    if (taskDetail.klasifikasi != null && _selectedKlasifikasi == null) {
+      setState(() {
+        _selectedKlasifikasi = taskDetail.klasifikasi;
+      });
+    }
+
+    if (taskDetail.pelaksanaan != null &&
+        taskDetail.pelaksanaan!.toLowerCase().contains('jaminan')) {
+      setState(() {
+        _verifikasiType = 'Jaminan';
+      });
+    }
+
+    setState(() {
+      _collaterals = colls;
+      if (_selectedCollateral == null && colls.isNotEmpty) {
+        _selectedCollateral = colls.first;
+        _kondisiJaminanController.text = _selectedCollateral!.kondisiAgunan ?? '';
+        _penguasaanJaminanController.text = _selectedCollateral!.penguasaanAgunan ?? '';
+      }
+    });
   }
 
   @override
@@ -179,8 +260,8 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
     }
 
     final detailTugas =
-        ref.read(detailTugasProvider(widget.task.id)).value?.data ??
-        widget.task;
+        ref.read(detailTugasProvider(widget.task.id)).value?.data.task ??
+        DetailTaskModel.fromTugasModel(widget.task);
     final isPenagihan = detailTugas.jenis == 'Penagihan';
     final showPhotoPicker = isPenagihan || _verifikasiType == 'Pinjaman';
 
@@ -203,7 +284,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
     try {
       if (isPenagihan) {
         await SimontokRepository.instance.submitPenagihanReport(
-          taskId: widget.task.id,
+          taskId: detailTugas.id,
           pelaksanaan: _selectedPelaksanaan ?? 'Penagihan Kredit',
           keteranganPelaksanaan: _keteranganPelaksanaanController.text.trim(),
           hasilPelaksanaan: _selectedHasil ?? 'Lainnya',
@@ -214,7 +295,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
         );
       } else if (_verifikasiType == 'Pinjaman') {
         await SimontokRepository.instance.submitVerifikasiReport(
-          taskId: widget.task.id,
+          taskId: detailTugas.id,
           penggunaKredit: _penggunaKreditController.text.trim(),
           penggunaanKredit: _penggunaanKreditController.text.trim(),
           alamatDebitur: _alamatDebiturController.text.trim(),
@@ -228,7 +309,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
         );
       } else {
         await SimontokRepository.instance.submitVerifikasiJaminanReport(
-          taskId: widget.task.id,
+          nomorAgunan: _selectedCollateral?.nomorAgunan ?? '',
           kondisiJaminan: _kondisiJaminanController.text.trim(),
           penguasaanJaminan: _penguasaanJaminanController.text.trim(),
         );
@@ -299,6 +380,15 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<DetailTugasModel>>(
+      detailTugasProvider(widget.task.id),
+      (previous, next) {
+        if (next.hasValue && next.value != null) {
+          _populateControllers(next.value!.data.task, next.value!.data.collaterals);
+        }
+      },
+    );
+
     final isPenagihan = widget.task.jenis == 'Penagihan';
 
     return Stack(
@@ -445,6 +535,23 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
                           ),
                           _buildKlasifikasiDropdown(),
                         ] else ...[
+                          if (_collaterals.isNotEmpty) ...[
+                            _buildDropdownFieldGeneric<DetailCollateralModel>(
+                              label: 'Pilih Jaminan/Agunan *',
+                              value: _selectedCollateral,
+                              items: _collaterals,
+                              itemAsString: (col) => '${col.nomorAgunan ?? "-"} | ${col.namaAgunan}',
+                              onChanged: (col) {
+                                setState(() {
+                                  _selectedCollateral = col;
+                                  if (col != null) {
+                                    _kondisiJaminanController.text = col.kondisiAgunan ?? '';
+                                    _penguasaanJaminanController.text = col.penguasaanAgunan ?? '';
+                                  }
+                                });
+                              },
+                            ),
+                          ],
                           _buildFormField(
                             label: 'Kondisi Jaminan',
                             controller: _kondisiJaminanController,
@@ -698,7 +805,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
         ),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
-          initialValue: value,
+          initialValue: items.contains(value) ? value : null,
           hint: Text(
             hint ?? 'Pilih $label',
             style: const TextStyle(
@@ -754,7 +861,9 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
         ),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
-          initialValue: _selectedKlasifikasi,
+          initialValue: const ['DM', 'DPP', 'DS', 'DSS', 'DTT'].contains(_selectedKlasifikasi)
+              ? _selectedKlasifikasi
+              : null,
           hint: const Text(
             'Pilih Klasifikasi',
             style: TextStyle(
@@ -784,6 +893,77 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
           validator: (val) {
             if (val == null || val.isEmpty) {
               return 'Klasifikasi tidak boleh kosong';
+            }
+            return null;
+          },
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            isDense: true,
+          ),
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppTheme.textPrimary.withValues(alpha: 0.5),
+          ),
+          isExpanded: true,
+          dropdownColor: Colors.white,
+        ),
+        const SizedBox(height: 8),
+        Divider(color: Colors.grey.shade200, height: 1),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildDropdownFieldGeneric<T>({
+    required String label,
+    required T? value,
+    required List<T> items,
+    required String Function(T) itemAsString,
+    required ValueChanged<T?> onChanged,
+    String? hint,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.primaryColor.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(height: 4),
+        DropdownButtonFormField<T>(
+          initialValue: items.contains(value) ? value : null,
+          hint: Text(
+            hint ?? 'Pilih $label',
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          items: items.map((item) {
+            return DropdownMenuItem<T>(
+              value: item,
+              child: Text(
+                itemAsString(item),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: onChanged,
+          validator: (val) {
+            if (val == null) {
+              return '$label tidak boleh kosong';
             }
             return null;
           },
@@ -862,7 +1042,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
 
   Widget _buildPhotoPicker() {
     final detailTugasAsync = ref.watch(detailTugasProvider(widget.task.id));
-    final currentTask = detailTugasAsync.value?.data ?? widget.task;
+    final fotoUrl = detailTugasAsync.value?.data.task.foto ?? widget.task.foto;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -912,7 +1092,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
               ),
             ],
           )
-        else if (currentTask.foto != null && currentTask.foto!.isNotEmpty)
+        else if (fotoUrl != null && fotoUrl.isNotEmpty)
           Column(
             children: [
               Container(
@@ -925,7 +1105,7 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(11),
                   child: Image.network(
-                    currentTask.foto!,
+                    fotoUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(

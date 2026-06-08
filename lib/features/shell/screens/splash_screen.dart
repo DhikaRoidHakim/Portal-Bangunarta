@@ -42,9 +42,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _floatingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
-    )..repeat(); // Loop terus untuk efek mengambang
+    )..repeat();
 
-    // Animasi kemunculan Logo
     _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _entryController,
@@ -59,7 +58,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
 
-    // Animasi kemunculan Judul
     _titleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _entryController,
@@ -75,7 +73,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           ),
         );
 
-    // Animasi kemunculan Subtitle/Tagline
     _subtitleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _entryController,
@@ -91,7 +88,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           ),
         );
 
-    // Animasi kemunculan Footer & Progress Bar
     _footerFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _entryController,
@@ -314,7 +310,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                       const SizedBox(height: 10),
 
-                      // Tagline/Subtitle ("PORTAL APLIKASI") dengan Slide & Fade
                       AnimatedBuilder(
                         animation: _entryController,
                         builder: (context, child) {
@@ -327,7 +322,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           );
                         },
                         child: Text(
-                          'PORTAL APLIKASI',
+                          'BANGUNARTA ONE',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -341,7 +336,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                 ),
 
-                // Footer: Versi & Gradient Progress Bar
                 Positioned(
                   bottom: 50,
                   left: 0,
@@ -354,7 +348,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Custom Gradient Progress Bar
                         TweenAnimationBuilder<double>(
                           duration: const Duration(milliseconds: 2700),
                           tween: Tween<double>(begin: 0.0, end: 1.0),
@@ -423,7 +416,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         // Versi Aplikasi
                         if (_version.isNotEmpty)
                           Text(
-                            _version,
+                            '$_version BETA',
                             style: AppTheme.versionText.copyWith(
                               color: AppTheme.primaryColor.withValues(
                                 alpha: 0.4,
