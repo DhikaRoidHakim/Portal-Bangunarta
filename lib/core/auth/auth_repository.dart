@@ -14,6 +14,8 @@ class AuthRepository {
   static const String _tokenTypeKey = 'token_type';
   static const String _expiresInKey = 'expires_in';
   static const String _biometricEnabledKey = 'biometric_enabled';
+  static const String _savedUsernameKey = 'saved_username';
+  static const String _savedPasswordKey = 'saved_password';
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -155,6 +157,25 @@ class AuthRepository {
       key: _biometricEnabledKey,
       value: isEnabled.toString(),
     );
+  }
+
+  Future<void> saveCredentials(String username, String password) async {
+    await _storage.write(key: _savedUsernameKey, value: username);
+    await _storage.write(key: _savedPasswordKey, value: password);
+  }
+
+  Future<Map<String, String>?> getCredentials() async {
+    final username = await _storage.read(key: _savedUsernameKey);
+    final password = await _storage.read(key: _savedPasswordKey);
+    if (username != null && password != null) {
+      return {'username': username, 'password': password};
+    }
+    return null;
+  }
+
+  Future<void> clearCredentials() async {
+    await _storage.delete(key: _savedUsernameKey);
+    await _storage.delete(key: _savedPasswordKey);
   }
 
   Future<void> logout() async {

@@ -189,7 +189,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         onTap: isLoading ? null : _loginWithBiometric,
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          height: 56, // Menyesuaikan tinggi ElevatedButton dengan padding vertical 16
+                          height:
+                              56, // Menyesuaikan tinggi ElevatedButton dengan padding vertical 16
                           width: 56,
                           decoration: BoxDecoration(
                             color: AppTheme.surfaceWhite,
@@ -302,12 +303,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _loadBiometricLoginVisibility() async {
     final isEnabled = await AuthRepository.instance.isBiometricEnabled();
-    final token = await AuthRepository.instance.getAccessToken();
 
     if (!mounted) return;
 
     setState(() {
-      _isBiometricLoginVisible = isEnabled && token != null && token.isNotEmpty;
+      _isBiometricLoginVisible = isEnabled;
     });
   }
 
@@ -333,6 +333,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             deviceOs: deviceInfo.os,
             fmcToken: '',
           );
+
+      // Simpan kredensial secara aman untuk login biometrik mendatang
+      await AuthRepository.instance.saveCredentials(username, password);
 
       if (!mounted) return;
 
@@ -362,21 +365,53 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       if (!didAuthenticate || !mounted) return;
 
-      // Panggil checkAuth() untuk memasukkan sesi ke Riverpod
-      await ref.read(authProvider.notifier).checkAuth();
+      // Coba verifikasi token lokal terlebih dahulu jika masih aktif
+      final token = await AuthRepository.instance.getAccessToken();
+      if (token != null && token.isNotEmpty) {
+        await ref.read(authProvider.notifier).checkAuth();
+        if (!mounted) return;
+
+        final authState = ref.read(authProvider);
+        if (authState.status == AuthStatus.authenticated) {
+          context.go('/dashboard');
+          return;
+        }
+      }
+
+      // Jika token tidak ada atau tidak valid, lakukan login menggunakan kredensial tersimpan
+      final credentials = await AuthRepository.instance.getCredentials();
+      if (credentials == null) {
+        _showMessage(
+          'Sesi biometrik kedaluwarsa. Silakan masuk menggunakan password.',
+        );
+        return;
+      }
+
+      final username = credentials['username']!;
+      final password = credentials['password']!;
+      final deviceInfo = await _getDeviceLoginInfo();
+
+      await ref
+          .read(authProvider.notifier)
+          .login(
+            username: username,
+            password: password,
+            deviceIdentifier: deviceInfo.identifier,
+            deviceName: deviceInfo.name,
+            deviceOs: deviceInfo.os,
+            fmcToken: '',
+          );
 
       if (!mounted) return;
 
-      final authState = ref.read(authProvider);
-      if (authState.status == AuthStatus.authenticated) {
-        context.go('/dashboard');
-      } else {
-        _showMessage('Sesi biometrik kedaluwarsa. Silakan masuk menggunakan password.');
-      }
+      context.go('/dashboard');
+    } on LocalAuthException catch (error) {
+      if (!mounted) return;
+      _showMessage('Otentikasi biometrik gagal: ${error.description}');
     } catch (error) {
       if (!mounted) return;
 
-      _showMessage('Autentikasi biometrik gagal');
+      _showMessage('Autentikasi biometrik gagal: $error');
     }
   }
 

@@ -47,23 +47,26 @@ Widget buildSambaBottomAppBar({
           // ---- Kiri: Beranda & Rekening ----
           Expanded(
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                buildSambaNavItem(
-                  index: 0,
-                  currentIndex: currentIndex,
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
-                  label: 'Beranda',
-                  onTap: () => onTap(0),
+                Expanded(
+                  child: buildSambaNavItem(
+                    index: 0,
+                    currentIndex: currentIndex,
+                    icon: Icons.home_outlined,
+                    activeIcon: Icons.home,
+                    label: 'Beranda',
+                    onTap: () => onTap(0),
+                  ),
                 ),
-                buildSambaNavItem(
-                  index: 1,
-                  currentIndex: currentIndex,
-                  icon: Icons.people_outline,
-                  activeIcon: Icons.people,
-                  label: 'Rekening',
-                  onTap: () => onTap(1),
+                Expanded(
+                  child: buildSambaNavItem(
+                    index: 1,
+                    currentIndex: currentIndex,
+                    icon: Icons.people_outline,
+                    activeIcon: Icons.people,
+                    label: 'Rekening',
+                    onTap: () => onTap(1),
+                  ),
                 ),
               ],
             ),
@@ -79,6 +82,8 @@ Widget buildSambaBottomAppBar({
                   Text(
                     'Open Account',
                     textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: currentIndex == 2
@@ -97,23 +102,26 @@ Widget buildSambaBottomAppBar({
           // ---- Kanan: Transaksi & Pengaturan ----
           Expanded(
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                buildSambaNavItem(
-                  index: 3,
-                  currentIndex: currentIndex,
-                  icon: Icons.receipt_long_outlined,
-                  activeIcon: Icons.receipt_long,
-                  label: 'Transaksi',
-                  onTap: () => onTap(3),
+                Expanded(
+                  child: buildSambaNavItem(
+                    index: 3,
+                    currentIndex: currentIndex,
+                    icon: Icons.receipt_long_outlined,
+                    activeIcon: Icons.receipt_long,
+                    label: 'Transaksi',
+                    onTap: () => onTap(3),
+                  ),
                 ),
-                buildSambaNavItem(
-                  index: 4,
-                  currentIndex: currentIndex,
-                  icon: Icons.settings_outlined,
-                  activeIcon: Icons.settings,
-                  label: 'Pengaturan',
-                  onTap: () => onTap(4),
+                Expanded(
+                  child: buildSambaNavItem(
+                    index: 4,
+                    currentIndex: currentIndex,
+                    icon: Icons.settings_outlined,
+                    activeIcon: Icons.settings,
+                    label: 'Pengaturan',
+                    onTap: () => onTap(4),
+                  ),
                 ),
               ],
             ),
@@ -140,7 +148,7 @@ Widget buildSambaNavItem({
     splashColor: AppTheme.secondaryColor.withValues(alpha: 0.1),
     highlightColor: Colors.transparent,
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -155,6 +163,8 @@ Widget buildSambaNavItem({
           const SizedBox(height: 2),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 11,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

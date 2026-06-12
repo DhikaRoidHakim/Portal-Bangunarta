@@ -20,6 +20,62 @@ class SambaHomeScreen extends StatefulWidget {
 class _SambaHomeScreenState extends State<SambaHomeScreen> {
   int _currentIndex = 0;
 
+  void _showFeatureNotAvailableDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.construction_outlined,
+                  color: AppTheme.primaryColor,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Segera Hadir',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Fitur ini sedang dalam pengembangan dan akan segera hadir untuk Anda.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Tutup'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,16 +117,16 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
       ),
       floatingActionButton: buildSambaFAB(
         currentIndex: _currentIndex,
-        onTap: () {
-          setState(() {
-            _currentIndex = 2;
-          });
-        },
+        onTap: _showFeatureNotAvailableDialog,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: buildSambaBottomAppBar(
         currentIndex: _currentIndex,
         onTap: (index) {
+          if (index == 2) {
+            _showFeatureNotAvailableDialog();
+            return;
+          }
           setState(() {
             _currentIndex = index;
           });

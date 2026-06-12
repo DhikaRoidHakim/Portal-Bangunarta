@@ -20,7 +20,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _entryController;
   late AnimationController _floatingController;
 
-  // Staggered animations
   late Animation<double> _logoFade;
   late Animation<double> _logoScale;
   late Animation<double> _titleFade;

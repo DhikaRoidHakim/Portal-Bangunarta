@@ -153,11 +153,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'rekening',
-            builder: (context, state) => const DetailRekeningScreen(),
+            builder: (context, state) {
+              final nomorRekening = state.extra as String;
+              return DetailRekeningScreen(nomorRekening: nomorRekening);
+            },
           ),
           GoRoute(
             path: 'transaksi',
-            builder: (context, state) => const DetailTransaksiScreen(),
+            builder: (context, state) {
+              final id = state.extra as int;
+              return DetailTransaksiScreen(transactionId: id);
+            },
           ),
           GoRoute(
             path: 'open-account',

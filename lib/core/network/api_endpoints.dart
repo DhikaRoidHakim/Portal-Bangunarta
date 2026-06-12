@@ -22,4 +22,8 @@ class ApiEndpoints {
       '/api/simontok/verifikasi-jaminan';
   static const String listProspek = '/api/simontok/prospek';
   static const String detailProspek = '/api/simontok/prospek';
+
+  // Endpoints Samba
+  static const String listSimpanan = '/api/samba/simpanan';
+  static const String transaksiSimpanan = '/api/samba/transaksi';
 }

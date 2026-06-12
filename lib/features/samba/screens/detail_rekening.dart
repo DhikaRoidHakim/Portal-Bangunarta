@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
+import 'package:bangunarta_portal/models/samba/detail_simpanan_model.dart';
 
-class DetailRekeningScreen extends StatelessWidget {
-  const DetailRekeningScreen({super.key});
+class DetailRekeningScreen extends ConsumerWidget {
+  final String nomorRekening;
+
+  const DetailRekeningScreen({super.key, required this.nomorRekening});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detailAsync = ref.watch(detailSimpananProvider(nomorRekening));
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppTheme.surfaceWhite,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading:
-            false, // Menghilangkan back button bawaan jika ada
+        automaticallyImplyLeading: false,
         title: Row(
           children: [
             Image.asset('assets/images/logo_polos.png', width: 28, height: 28),
@@ -50,172 +55,189 @@ class DetailRekeningScreen extends StatelessWidget {
           child: Container(color: AppTheme.inputBorder, height: 1.0),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
+      body: detailAsync.when(
+        data: (detail) {
+          final data = detail.data;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text(
-                      'DATA',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary,
-                        letterSpacing: 0.5,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'DATA',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Detail Rekening',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Rekening',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceWhite,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.inputBorder),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        color: AppTheme.textSecondary,
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                        padding: EdgeInsets.zero,
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
                 Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceWhite,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.inputBorder),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.textPrimary.withValues(alpha: 0.04),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    color: AppTheme.textSecondary,
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
-                    ),
-                    padding: EdgeInsets.zero,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLabeledTextField(
+                        label: 'Nomor CIF',
+                        initialValue: data.nomorCif,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Nomor Rekening',
+                        initialValue: data.nomorRekening,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Nama Lengkap',
+                        initialValue: data.namaLengkap,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Produk Simpanan',
+                        initialValue: data.produkSimpanan,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Alamat KTP',
+                        initialValue: data.alamatKtp,
+                        maxLines: 3,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Nomor HP',
+                        initialValue: data.nomorHp ?? '-',
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Tujuan Pembukaan',
+                        initialValue: data.tujuanPembukaan ?? '-',
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Nama Ahli Waris',
+                        initialValue: data.namaAhliWaris ?? '-',
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Status Ahli Waris',
+                        initialValue: data.statusAhliWaris ?? '-',
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Kontak Ahli Waris',
+                        initialValue: data.kontakAhliWaris ?? '-',
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Nama Kolektor',
+                        initialValue: data.namaKolektor,
+                        readOnly: true,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceWhite,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.textPrimary.withValues(alpha: 0.04),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildLabeledTextField(
-                    label: 'Rekening',
-                    initialValue: '01.101.015905',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabeledTextField(
-                    label: 'Name Lengkap',
-                    initialValue: 'A YOMA AMANDA PUTRI',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabeledTextField(
-                    label: 'Alamat Lengkap',
-                    initialValue:
-                        "Blok Mana aja bebas gimana kamu no 39 kayaknya",
-                    maxLines: 4,
-                  ),
-                  const SizedBox(height: 28),
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Divider(
-                          color: AppTheme.inputBorder,
-                          thickness: 1,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'DEPOSIT',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary.withValues(
-                              alpha: 0.8,
-                            ),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      const Expanded(
-                        child: Divider(
-                          color: AppTheme.inputBorder,
-                          thickness: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 28),
-                  _buildLabeledTextField(
-                    label: 'Saldo Akhir',
-                    initialValue: '20,739',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabeledTextField(
-                    label: 'Jumlah Setoran',
-                    hintText: 'Minimal 0',
-                  ),
-                ],
-              ),
-            ),
-          ],
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryColor),
         ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceWhite,
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.textPrimary.withValues(alpha: 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16),
-        child: SafeArea(
-          child: ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF006CE3), // A vibrant blue
-              foregroundColor: AppTheme.surfaceWhite,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Row(
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.swap_vert, size: 20),
-                const SizedBox(width: 8),
-                const Text(
-                  'Setoran',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.redAccent,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  error.toString().replaceFirst('Exception: ', ''),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.invalidate(detailSimpananProvider(nomorRekening));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Coba Lagi'),
                 ),
               ],
             ),
@@ -230,6 +252,7 @@ class DetailRekeningScreen extends StatelessWidget {
     String? initialValue,
     String? hintText,
     int maxLines = 1,
+    bool readOnly = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,13 +262,14 @@ class DetailRekeningScreen extends StatelessWidget {
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF2C3E50), // Standard dark text
+            color: Color(0xFF2C3E50),
           ),
         ),
         const SizedBox(height: 6),
         TextFormField(
           initialValue: initialValue,
           maxLines: maxLines,
+          readOnly: readOnly,
           style: const TextStyle(
             fontSize: 15,
             color: Color(0xFF334155),
@@ -259,10 +283,12 @@ class DetailRekeningScreen extends StatelessWidget {
             ),
             contentPadding: EdgeInsets.symmetric(
               horizontal: 14,
-              vertical: maxLines > 1 ? 14 : 12, // Tighter vertical padding
+              vertical: maxLines > 1 ? 14 : 12,
             ),
             filled: true,
-            fillColor: AppTheme.surfaceWhite,
+            fillColor: readOnly
+                ? const Color(0xFFF8FAFC)
+                : AppTheme.surfaceWhite,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(

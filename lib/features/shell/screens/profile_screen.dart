@@ -577,12 +577,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         final didAuthenticate = await _localAuthentication.authenticate(
           localizedReason: 'Aktifkan login biometrik untuk Bangunarta One',
           biometricOnly: true,
+          persistAcrossBackgrounding: true,
         );
 
         if (!didAuthenticate) return;
       }
 
       await AuthRepository.instance.setBiometricEnabled(value);
+      if (!value) {
+        await AuthRepository.instance.clearCredentials();
+      }
 
       if (!mounted) return;
 
@@ -595,10 +599,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ? 'Login biometrik berhasil diaktifkan'
             : 'Login biometrik dimatikan',
       );
+    } on LocalAuthException catch (error) {
+      if (!mounted) return;
+      if (error.code == LocalAuthExceptionCode.noCredentialsSet) {
+        _showMessage('Gagal: Kunci layar (PIN/Pola/Password) belum diatur di perangkat. Silakan atur terlebih dahulu di Settings.');
+      } else if (error.code == LocalAuthExceptionCode.noBiometricsEnrolled) {
+        _showMessage('Gagal: Sidik jari belum terdaftar di perangkat. Silakan daftarkan sidik jari Anda di Settings.');
+      } else {
+        _showMessage('Gagal mengubah pengaturan biometrik: ${error.description}');
+      }
     } catch (error) {
       if (!mounted) return;
 
-      _showMessage('Gagal mengubah pengaturan biometrik');
+      _showMessage('Gagal mengubah pengaturan biometrik: $error');
     } finally {
       if (mounted) {
         setState(() {

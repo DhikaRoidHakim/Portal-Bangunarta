@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
+import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
 
-class DetailTransaksiScreen extends StatelessWidget {
-  const DetailTransaksiScreen({super.key});
+class DetailTransaksiScreen extends ConsumerWidget {
+  final int transactionId;
+
+  const DetailTransaksiScreen({super.key, required this.transactionId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detailAsync = ref.watch(
+      detailSimpananTransactionProvider(transactionId),
+    );
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppTheme.surfaceWhite,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: false, // Menghilangkan back button bawaan
+        automaticallyImplyLeading: false,
         title: Row(
           children: [
             Image.asset('assets/images/logo_polos.png', width: 28, height: 28),
@@ -49,154 +57,218 @@ class DetailTransaksiScreen extends StatelessWidget {
           child: Container(color: AppTheme.inputBorder, height: 1.0),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
+      body: detailAsync.when(
+        data: (detail) {
+          final tx = detail.data;
+          final isPending = tx.status == 'Belum Diotorisasi';
+          final statusColor = isPending
+              ? const Color(0xFFD97706)
+              : const Color(0xFF15803D);
+          final statusBg = isPending
+              ? const Color(0xFFFEF3C7)
+              : const Color(0xFFDCFCE7);
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text(
-                      'DATA',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary,
-                        letterSpacing: 0.5,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'DATA',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Detail Transaksi',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Transaksi',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceWhite,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.inputBorder),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        color: AppTheme.textSecondary,
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                        padding: EdgeInsets.zero,
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
                 Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceWhite,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.inputBorder),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    color: AppTheme.textSecondary,
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
-                    ),
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceWhite,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.textPrimary.withValues(alpha: 0.04),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildLabeledTextField(
-                    label: 'Rekening',
-                    initialValue: '1.100.2.2',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabeledTextField(
-                    label: 'Name Lengkap',
-                    initialValue: 'NANA SUMARNA',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabeledTextField(
-                    label: 'Alamat Lengkap',
-                    initialValue:
-                        "DUSUN PARMASARI RT 03 RW 10\nPAMANUKAN PAMANUKAN SUBANG",
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 28),
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Divider(
-                          color: AppTheme.inputBorder,
-                          thickness: 1,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'DEPOSIT',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary.withValues(
-                              alpha: 0.8,
-                            ),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      const Expanded(
-                        child: Divider(
-                          color: AppTheme.inputBorder,
-                          thickness: 1,
-                        ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.textPrimary.withValues(alpha: 0.04),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 28),
-                  _buildLabeledTextField(
-                    label: 'Saldo Sebelumnya',
-                    initialValue: '20,000',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Status Transaksi',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2C3E50),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusBg,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              tx.status,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabeledTextField(
+                        label: 'Kode/Dokumen',
+                        initialValue: tx.kode,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Nomor Rekening',
+                        initialValue: tx.nomorRekening,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Nama Lengkap',
+                        initialValue: tx.namaLengkap,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Nominal Setoran',
+                        initialValue: 'Rp ${tx.nominal}',
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Deskripsi',
+                        initialValue: tx.deskripsi,
+                        maxLines: 2,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Kantor Petugas',
+                        initialValue: tx.kantorPetugas,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Nama Petugas',
+                        initialValue: tx.namaPetugas,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabeledTextField(
+                        label: 'Waktu Transaksi',
+                        initialValue: tx.waktu,
+                        readOnly: true,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  _buildLabeledTextField(
-                    label: 'Jumlah Setoran',
-                    initialValue: '23,000',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabeledTextField(
-                    label: 'Saldo Akhir',
-                    initialValue: '43,000',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabeledTextField(
-                    label: 'Dokumen',
-                    initialValue: 'SMB661-RH4U3X',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabeledTextField(
-                    label: 'Waktu',
-                    initialValue: '2026-03-13 13:12:48',
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
-            const SizedBox(height: 24),
-          ],
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryColor),
+        ),
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.redAccent,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  error.toString().replaceFirst('Exception: ', ''),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.invalidate(
+                      detailSimpananTransactionProvider(transactionId),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Coba Lagi'),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       bottomNavigationBar: Container(
@@ -215,7 +287,7 @@ class DetailTransaksiScreen extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF006CE3), // A vibrant blue
+              backgroundColor: const Color(0xFF006CE3),
               foregroundColor: AppTheme.surfaceWhite,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -245,6 +317,7 @@ class DetailTransaksiScreen extends StatelessWidget {
     String? initialValue,
     String? hintText,
     int maxLines = 1,
+    bool readOnly = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,13 +327,14 @@ class DetailTransaksiScreen extends StatelessWidget {
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF2C3E50), // Standard dark text
+            color: Color(0xFF2C3E50),
           ),
         ),
         const SizedBox(height: 6),
         TextFormField(
           initialValue: initialValue,
           maxLines: maxLines,
+          readOnly: readOnly,
           style: const TextStyle(
             fontSize: 15,
             color: Color(0xFF334155),
@@ -274,10 +348,12 @@ class DetailTransaksiScreen extends StatelessWidget {
             ),
             contentPadding: EdgeInsets.symmetric(
               horizontal: 14,
-              vertical: maxLines > 1 ? 14 : 12, // Tighter vertical padding
+              vertical: maxLines > 1 ? 14 : 12,
             ),
             filled: true,
-            fillColor: AppTheme.surfaceWhite,
+            fillColor: readOnly
+                ? const Color(0xFFF8FAFC)
+                : AppTheme.surfaceWhite,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(

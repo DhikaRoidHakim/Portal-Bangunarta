@@ -32,7 +32,11 @@ final listPinjamanProvider = FutureProvider.autoDispose<ListPinjamanModel>((
   final alias = authState.user?.user.alias;
 
   if (alias == null || alias.isEmpty) {
-    throw Exception('User alias tidak ditemukan. Silakan login kembali.');
+    return const ListPinjamanModel(
+      success: true,
+      data: [],
+      hasMore: false,
+    );
   }
 
   final searchQuery = ref.watch(simontokSearchQueryProvider);
@@ -73,7 +77,11 @@ final listTugasProvider = FutureProvider.autoDispose<ListTugasModel>((
   final alias = authState.user?.user.alias;
 
   if (alias == null || alias.isEmpty) {
-    throw Exception('User alias tidak ditemukan. Silakan login kembali.');
+    return const ListTugasModel(
+      success: true,
+      data: [],
+      hasMore: false,
+    );
   }
 
   final searchQuery = ref.watch(simontokTugasSearchQueryProvider);
@@ -108,7 +116,11 @@ final listProspekProvider = FutureProvider.autoDispose<ListProspekModel>((
   final alias = authState.user?.user.alias;
 
   if (alias == null || alias.isEmpty) {
-    throw Exception('User alias tidak ditemukan. Silakan login kembali.');
+    return const ListProspekModel(
+      success: true,
+      data: [],
+      hasMore: false,
+    );
   }
 
   final searchQuery = ref.watch(simontokProspekSearchQueryProvider);
