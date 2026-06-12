@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
+import 'package:bangunarta_portal/features/samba/widgets/samba_skeletons.dart';
 
 Widget buildStatCard({
   required String title,
@@ -78,6 +79,12 @@ Widget buildBerandaBody() {
     builder: (context, ref, child) {
       final simpananState = ref.watch(sambaSimpananNotifierProvider);
       final transaksiState = ref.watch(sambaTransaksiNotifierProvider);
+
+      // Show skeleton while data is loading
+      final isLoading = simpananState.isLoading || transaksiState.isLoading;
+      if (isLoading && !simpananState.hasValue && !transaksiState.hasValue) {
+        return const BerandaSkeleton();
+      }
 
       final dateString = DateTime.now().toString().split(' ')[0];
 

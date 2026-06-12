@@ -49,11 +49,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     Widget bodyWidget;
 
-    if (authState.status == AuthStatus.loading) {
+    if (authState.status == AuthStatus.loading ||
+        authState.status == AuthStatus.unauthenticated ||
+        authState.status == AuthStatus.initial) {
       bodyWidget = const Center(
         child: CircularProgressIndicator(color: AppTheme.primaryColor),
       );
-    } else if (user == null) {
+    } else if (user == null || authState.status == AuthStatus.error) {
       bodyWidget = _buildErrorState();
     } else {
       bodyWidget = RefreshIndicator(

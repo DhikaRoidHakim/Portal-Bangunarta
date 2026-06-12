@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:avatar_plus/avatar_plus.dart';
+import 'package:bangunarta_portal/features/samba/widgets/samba_skeletons.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,9 +12,52 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _obscurePassword = true;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Simulate brief data loading for smoother perceived performance
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppTheme.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: AppTheme.surfaceWhite,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          title: Row(
+            children: [
+              Image.asset('assets/images/logo_polos.png', width: 28, height: 28),
+              const SizedBox(width: 8),
+              const Text(
+                'BPR BANGUNARTA',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1.0),
+            child: Container(color: AppTheme.inputBorder, height: 1.0),
+          ),
+        ),
+        body: const ProfileFormSkeleton(),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
       appBar: AppBar(

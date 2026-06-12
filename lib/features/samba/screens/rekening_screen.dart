@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
+import 'package:bangunarta_portal/features/samba/widgets/samba_skeletons.dart';
 
 class RekeningScreen extends ConsumerStatefulWidget {
   const RekeningScreen({super.key});
@@ -280,14 +281,7 @@ class _RekeningScreenState extends ConsumerState<RekeningScreen> {
                         ],
                       );
                     },
-                    loading: () => const Padding(
-                      padding: EdgeInsets.all(32.0),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                    ),
+                    loading: () => const RekeningListSkeleton(),
                     error: (error, stack) => Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Column(

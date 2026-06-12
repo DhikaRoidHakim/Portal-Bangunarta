@@ -10,6 +10,18 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+
+    if (authState.status == AuthStatus.loading ||
+        authState.status == AuthStatus.unauthenticated ||
+        authState.status == AuthStatus.initial) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF5F6FA),
+        body: Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryColor),
+        ),
+      );
+    }
+
     final authMe = authState.user;
     final name = authMe?.user.name?.trim() ?? 'User';
 
