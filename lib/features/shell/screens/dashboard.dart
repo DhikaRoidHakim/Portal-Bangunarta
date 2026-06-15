@@ -240,30 +240,30 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ),
 
                   // Notification
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(14.r),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14.r),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.18),
-                          ),
-                        ),
-                        child: GestureDetector(
-                          onTap: () => context.push('/dashboard/notifications'),
-                          child: Icon(
-                            Icons.notifications_none_rounded,
-                            color: Colors.white,
-                            size: 22.r,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // ClipRRect(
+                  //   borderRadius: BorderRadius.circular(14.r),
+                  //   child: BackdropFilter(
+                  //     filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  //     child: Container(
+                  //       padding: const EdgeInsets.all(10),
+                  //       decoration: BoxDecoration(
+                  //         color: Colors.white.withValues(alpha: 0.12),
+                  //         borderRadius: BorderRadius.circular(14.r),
+                  //         border: Border.all(
+                  //           color: Colors.white.withValues(alpha: 0.18),
+                  //         ),
+                  //       ),
+                  //       child: GestureDetector(
+                  //         onTap: () => context.push('/dashboard/notifications'),
+                  //         child: Icon(
+                  //           Icons.notifications_none_rounded,
+                  //           color: Colors.white,
+                  //           size: 22.r,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
 

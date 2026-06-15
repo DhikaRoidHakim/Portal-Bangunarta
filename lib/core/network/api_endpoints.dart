@@ -1,10 +1,20 @@
+import 'package:bangunarta_portal/core/services/remote_config_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class ApiEndpoints {
   static const bool isProduction = false;
 
-  static const String devBaseUrl = 'https://codex.stg.pba.co.id';
-  static const String prodBaseUrl = 'https://codex.bprbangunarta.co.id';
+  /// URL dari .env sebagai fallback
+  static String get _devBaseUrl => dotenv.env['DEV_BASE_URL'] ?? '';
+  static String get _prodBaseUrl => dotenv.env['PROD_BASE_URL'] ?? '';
 
-  static String get baseUrl => isProduction ? prodBaseUrl : devBaseUrl;
+  static String get baseUrl {
+    final remoteUrl = RemoteConfigService().baseUrl;
+    if (remoteUrl.isNotEmpty) {
+      return remoteUrl;
+    }
+    return isProduction ? _prodBaseUrl : _devBaseUrl;
+  }
 
   // Endpoints Authentication
   static const String login = '/api/jwt-auth';

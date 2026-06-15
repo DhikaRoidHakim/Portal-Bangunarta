@@ -262,7 +262,10 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
     final detailTugas =
         ref.read(detailTugasProvider(widget.task.id)).value?.data.task ??
         DetailTaskModel.fromTugasModel(widget.task);
-    final isPenagihan = detailTugas.jenis == 'Penagihan';
+    final isPenagihan = detailTugas.jenis == 'Penagihan' ||
+        detailTugas.jenis == 'Prospek' ||
+        detailTugas.jenis == 'Telebiling' ||
+        detailTugas.jenis == 'Telebilling';
     final showPhotoPicker = isPenagihan || _verifikasiType == 'Pinjaman';
 
     if (showPhotoPicker &&
@@ -389,7 +392,10 @@ class _BuatLaporanScreenState extends ConsumerState<BuatLaporanScreen> {
       },
     );
 
-    final isPenagihan = widget.task.jenis == 'Penagihan';
+    final isPenagihan = widget.task.jenis == 'Penagihan' ||
+        widget.task.jenis == 'Prospek' ||
+        widget.task.jenis == 'Telebiling' ||
+        widget.task.jenis == 'Telebilling';
 
     return Stack(
       children: [

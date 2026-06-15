@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "600385800127",
+    "project_id": "bangunarta-one",
+    "storage_bucket": "bangunarta-one.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:600385800127:android:c0a48f4ae86650c5b4830a",
+        "android_client_info": {
+          "package_name": "com.bangunarta.one"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5D3jTgWp4o4RDEJkZquMJP4oksc9BYTE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

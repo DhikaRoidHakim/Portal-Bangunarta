@@ -40,6 +40,9 @@ class AuthRepository {
     String fmcToken = '',
   }) async {
     try {
+      print('BASE URL: ${ApiEndpoints.baseUrl}');
+      print('Endpoints Login : ${ApiEndpoints.login}');
+      
       final response = await _dio.post(
         ApiEndpoints.login,
         data: {
