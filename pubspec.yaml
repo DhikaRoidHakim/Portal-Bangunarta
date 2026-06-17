@@ -54,6 +54,9 @@ dependencies:
     firebase_remote_config: ^6.5.2
     flutter_dotenv: ^6.0.1
     url_launcher: ^6.3.0
+    print_bluetooth_thermal: 1.2.1
+    esc_pos_utils_plus: ^2.0.4
+    permission_handler: ^11.3.1
 
 dev_dependencies:
     flutter_test:

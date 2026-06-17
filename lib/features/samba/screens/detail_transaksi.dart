@@ -1,8 +1,13 @@
+import 'dart:math' show pi;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
+import 'package:bangunarta_portal/features/samba/widgets/printer_selection_sheet.dart';
 import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
+import 'package:intl/intl.dart';
 
 class DetailTransaksiScreen extends ConsumerWidget {
   final int transactionId;
@@ -16,295 +21,376 @@ class DetailTransaksiScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundLight,
+      backgroundColor: const Color(0xFFF1F5FA),
       appBar: AppBar(
-        backgroundColor: AppTheme.surfaceWhite,
+        backgroundColor: AppTheme.primaryColor,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Image.asset('assets/images/logo_polos.png', width: 28, height: 28),
-            const SizedBox(width: 8),
-            const Text(
-              'BPR BANGUNARTA',
-              style: TextStyle(
-                color: AppTheme.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.primaryColor.withValues(alpha: 0.08),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.person_outline),
-              color: AppTheme.primaryColor,
-              onPressed: () {},
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              padding: EdgeInsets.zero,
-            ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 20,
           ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: AppTheme.inputBorder, height: 1.0),
+          onPressed: () => Navigator.pop(context),
         ),
+        title: const Text(
+          'Detail Transaksi',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: detailAsync.when(
-        data: (detail) {
-          final tx = detail.data;
-          final isPending = tx.status == 'Belum Diotorisasi';
-          final statusColor = isPending
-              ? const Color(0xFFD97706)
-              : const Color(0xFF15803D);
-          final statusBg = isPending
-              ? const Color(0xFFFEF3C7)
-              : const Color(0xFFDCFCE7);
+        data: (detail) => _buildContent(context, detail.data),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryColor),
+        ),
+        error: (error, stack) => _buildErrorState(context, ref, error),
+      ),
+      bottomNavigationBar: detailAsync.whenOrNull(
+        data: (detail) => _buildBottomBar(context, detail.data),
+      ),
+    );
+  }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20.0),
+  Widget _buildContent(BuildContext context, TransactionData tx) {
+    final isPending = tx.status == 'Belum Diotorisasi';
+    final isDebit =
+        tx.jenisTransaksi.toLowerCase().contains('debit') ||
+        tx.jenisTransaksi.toLowerCase().contains('tarik');
+
+    final statusColor = isPending
+        ? const Color(0xFFD97706)
+        : const Color(0xFF15803D);
+    final statusBg = isPending
+        ? const Color(0xFFFEF3C7)
+        : const Color(0xFFDCFCE7);
+
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+    final nominalFormatted = formatter.format(tx.nominal);
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // ── Hero Header ──
+          _HeroHeader(
+            nominal: nominalFormatted,
+            jenisTransaksi: "Setoran Tunai",
+            status: tx.status,
+            statusColor: statusColor,
+            statusBg: statusBg,
+            isPending: isPending,
+            isDebit: isDebit,
+          ),
+
+          // ── Receipt Body ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'DATA',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Detail Transaksi',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceWhite,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppTheme.inputBorder),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        color: AppTheme.textSecondary,
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        constraints: const BoxConstraints(
-                          minWidth: 40,
-                          minHeight: 40,
-                        ),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                // Receipt Card
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceWhite,
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.textPrimary.withValues(alpha: 0.04),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        color: AppTheme.primaryColor.withValues(alpha: 0.06),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // Kode & Nomor Rekening
+                      _buildSection(
+                        title: 'Informasi Transaksi',
+                        icon: Icons.receipt_long_rounded,
+                        iconColor: AppTheme.primaryColor,
                         children: [
-                          const Text(
-                            'Status Transaksi',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF2C3E50),
-                            ),
+                          _buildInfoRow(
+                            label: 'Kode / Dokumen',
+                            value: tx.kode,
+                            icon: Icons.tag_rounded,
+                            onCopy: tx.kode,
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusBg,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              tx.status,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: statusColor,
-                              ),
-                            ),
+                          _buildDivider(),
+                          _buildInfoRow(
+                            label: 'Jenis Transaksi',
+                            value: "Setoran Tunai",
+                            icon: Icons.swap_horiz_rounded,
+                          ),
+                          _buildDivider(),
+                          _buildInfoRow(
+                            label: 'Waktu Transaksi',
+                            value: tx.waktu,
+                            icon: Icons.access_time_rounded,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
-                      _buildLabeledTextField(
-                        label: 'Kode/Dokumen',
-                        initialValue: tx.kode,
-                        readOnly: true,
+
+                      _buildSectionDivider(),
+
+                      // Informasi Nasabah
+                      _buildSection(
+                        title: 'Data Nasabah',
+                        icon: Icons.person_rounded,
+                        iconColor: const Color(0xFF6366F1),
+                        children: [
+                          _buildInfoRow(
+                            label: 'Nomor Rekening',
+                            value: tx.nomorRekening,
+                            icon: Icons.credit_card_rounded,
+                            onCopy: tx.nomorRekening,
+                          ),
+                          _buildDivider(),
+                          _buildInfoRow(
+                            label: 'Nama Lengkap',
+                            value: tx.namaLengkap,
+                            icon: Icons.badge_rounded,
+                          ),
+                          if (tx.namaPenyetor != null &&
+                              tx.namaPenyetor!.isNotEmpty) ...[
+                            _buildDivider(),
+                            _buildInfoRow(
+                              label: 'Nama Penyetor',
+                              value: tx.namaPenyetor!,
+                              icon: Icons.person_add_alt_1_rounded,
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      _buildLabeledTextField(
-                        label: 'Nomor Rekening',
-                        initialValue: tx.nomorRekening,
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLabeledTextField(
-                        label: 'Nama Lengkap',
-                        initialValue: tx.namaLengkap,
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLabeledTextField(
-                        label: 'Nominal Setoran',
-                        initialValue: 'Rp ${tx.nominal}',
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLabeledTextField(
-                        label: 'Deskripsi',
-                        initialValue: tx.deskripsi,
-                        maxLines: 2,
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLabeledTextField(
-                        label: 'Kantor Petugas',
-                        initialValue: tx.kantorPetugas,
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLabeledTextField(
-                        label: 'Nama Petugas',
-                        initialValue: tx.namaPetugas,
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLabeledTextField(
-                        label: 'Waktu Transaksi',
-                        initialValue: tx.waktu,
-                        readOnly: true,
+
+                      _buildSectionDivider(),
+
+                      // Keterangan
+                      _buildSection(
+                        title: 'Keterangan',
+                        icon: Icons.notes_rounded,
+                        iconColor: const Color(0xFF0EA5E9),
+                        children: [
+                          _buildInfoRow(
+                            label: 'Deskripsi',
+                            value: tx.deskripsi.isNotEmpty ? tx.deskripsi : '-',
+                            icon: Icons.info_outline_rounded,
+                            isMultiLine: true,
+                          ),
+                          _buildDivider(),
+                          _buildInfoRow(
+                            label: 'Kantor Petugas',
+                            value: tx.kantorPetugas,
+                            icon: Icons.store_mall_directory_rounded,
+                          ),
+                          _buildDivider(),
+                          _buildInfoRow(
+                            label: 'Nama Petugas',
+                            value: tx.namaPetugas,
+                            icon: Icons.manage_accounts_rounded,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-              ],
-            ),
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppTheme.primaryColor),
-        ),
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.redAccent,
-                  size: 48,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  error.toString().replaceFirst('Exception: ', ''),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    ref.invalidate(
-                      detailSimpananTransactionProvider(transactionId),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Coba Lagi'),
-                ),
               ],
             ),
           ),
-        ),
+        ],
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceWhite,
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.textPrimary.withValues(alpha: 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16),
-        child: SafeArea(
-          child: ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF006CE3),
-              foregroundColor: AppTheme.surfaceWhite,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.print_outlined, size: 20),
-                const SizedBox(width: 8),
-                const Text(
-                  'Cetak',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    );
+  }
+
+  Widget _buildSection({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required List<Widget> children,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ],
+                child: Icon(icon, color: iconColor, size: 16),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ...children,
+      ],
+    );
+  }
+
+  Widget _buildInfoRow({
+    required String label,
+    required String value,
+    required IconData icon,
+    String? onCopy,
+    bool isMultiLine = false,
+  }) {
+    return Builder(
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            crossAxisAlignment: isMultiLine
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 17,
+                color: AppTheme.textSecondary.withValues(alpha: 0.6),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onCopy != null)
+                GestureDetector(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: onCopy));
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        duration: const Duration(seconds: 2),
+                        content: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(0xFFDCFCE7),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFDCFCE7),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.check_rounded,
+                                  color: Color(0xFF16A34A),
+                                  size: 16,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Berhasil disalin',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF15803D),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.copy_rounded,
+                      size: 15,
+                      color: AppTheme.primaryColor.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Divider(height: 1, thickness: 0.8, color: const Color(0xFFF1F5F9)),
+    );
+  }
+
+  Widget _buildSectionDivider() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: List.generate(
+          40,
+          (i) => Expanded(
+            child: Container(
+              height: 1.5,
+              color: i.isEven ? Colors.transparent : const Color(0xFFE2E8F0),
             ),
           ),
         ),
@@ -312,65 +398,302 @@ class DetailTransaksiScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLabeledTextField({
-    required String label,
-    String? initialValue,
-    String? hintText,
-    int maxLines = 1,
-    bool readOnly = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF2C3E50),
+  Widget _buildErrorState(BuildContext context, WidgetRef ref, Object error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.cloud_off_rounded,
+                color: Colors.redAccent,
+                size: 44,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Gagal Memuat Data',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString().replaceFirst('Exception: ', ''),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                ref.invalidate(
+                  detailSimpananTransactionProvider(transactionId),
+                );
+              },
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text(
+                'Coba Lagi',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(BuildContext context, TransactionData tx) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _showPrinterSheet(context, tx),
+              borderRadius: BorderRadius.circular(14),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.print_rounded, color: Colors.white, size: 20),
+                    SizedBox(width: 10),
+                    Text(
+                      'Cetak Bukti Transaksi',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 6),
-        TextFormField(
-          initialValue: initialValue,
-          maxLines: maxLines,
-          readOnly: readOnly,
-          style: const TextStyle(
-            fontSize: 15,
-            color: Color(0xFF334155),
-            fontWeight: FontWeight.w400,
+      ),
+    );
+  }
+
+  void _showPrinterSheet(BuildContext context, TransactionData tx) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => PrinterSelectionSheet(transactionData: tx),
+    );
+  }
+}
+
+// ── Hero Header Widget ──────────────────────────────────────────────
+class _HeroHeader extends StatelessWidget {
+  final String nominal;
+  final String jenisTransaksi;
+  final String status;
+  final Color statusColor;
+  final Color statusBg;
+  final bool isPending;
+  final bool isDebit;
+
+  const _HeroHeader({
+    required this.nominal,
+    required this.jenisTransaksi,
+    required this.status,
+    required this.statusColor,
+    required this.statusBg,
+    required this.isPending,
+    required this.isDebit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.bottomCenter,
+      children: [
+        // Background gradient panel
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 52),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppTheme.primaryColor, Color(0xFF1565C0)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: const TextStyle(
-              fontSize: 15,
-              color: AppTheme.textSecondary,
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: maxLines > 1 ? 14 : 12,
-            ),
-            filled: true,
-            fillColor: readOnly
-                ? const Color(0xFFF8FAFC)
-                : AppTheme.surfaceWhite,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: AppTheme.inputBorder,
-                width: 1,
+          child: Column(
+            children: [
+              // Jenis Transaksi chip
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isDebit
+                          ? Icons.arrow_upward_rounded
+                          : Icons.arrow_downward_rounded,
+                      color: Colors.white.withValues(alpha: 0.9),
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      jenisTransaksi,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Color(0xFF006CE3),
-                width: 1.5,
+              const SizedBox(height: 14),
+              // Nominal
+              Text(
+                nominal,
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
+              const SizedBox(height: 12),
+              // Status badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isPending
+                            ? const Color(0xFFFDE68A)
+                            : const Color(0xFF86EFAC),
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      status,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.95),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
+          ),
+        ),
+        // Curved bottom
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: CustomPaint(
+            size: const Size(double.infinity, 40),
+            painter: _CurveClipper(),
           ),
         ),
       ],
     );
   }
+}
+
+class _CurveClipper extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0xFFF1F5FA);
+    final path = Path()
+      ..moveTo(0, size.height)
+      ..lineTo(0, size.height * 0.6)
+      ..quadraticBezierTo(size.width / 2, 0, size.width, size.height * 0.6)
+      ..lineTo(size.width, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CurveClipper oldDelegate) => false;
 }
