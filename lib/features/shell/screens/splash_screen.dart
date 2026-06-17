@@ -1,11 +1,15 @@
+import 'dart:io' show Platform;
 import 'dart:math' show pi, sin, cos;
 import 'dart:ui' show ImageFilter;
 import 'package:bangunarta_portal/core/auth/auth_provider.dart';
+import 'package:bangunarta_portal/core/auth/auth_repository.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemNavigator;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -104,6 +108,42 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!mounted) return;
 
+    // 1. Check version status
+    try {
+      final config = await AuthRepository.instance.getAppConfig();
+      final info = await PackageInfo.fromPlatform();
+      final currentAppVersion = info.version;
+
+      bool isUpdateRequired = false;
+      String? updateUrl;
+
+      if (Platform.isAndroid) {
+        final currentVer = config.androidCurrentVersion;
+        if (config.forceUpdate == 1 && currentAppVersion != currentVer) {
+          isUpdateRequired = true;
+          updateUrl = 'https://play.google.com/store/apps/details?id=com.bangunarta.one';
+        }
+      } else if (Platform.isIOS) {
+        final currentVer = config.iosCurrentVersion;
+        if (config.forceUpdate == 1 && currentAppVersion != currentVer) {
+          isUpdateRequired = true;
+          updateUrl = 'https://apps.apple.com/app/id6477839352';
+        }
+      }
+
+      if (isUpdateRequired && updateUrl != null) {
+        if (mounted) {
+          _showForceUpdateDialog(updateUrl);
+        }
+        return;
+      }
+    } catch (e) {
+      debugPrint('Error checking app version: $e');
+    }
+
+    if (!mounted) return;
+
+    // 2. Perform normal auth checking
     await ref.read(authProvider.notifier).checkAuth();
 
     if (!mounted) return;
@@ -114,6 +154,107 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     } else {
       context.go('/login');
     }
+  }
+
+  void _showForceUpdateDialog(String updateUrl) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.system_update_rounded,
+                  color: AppTheme.primaryColor,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Pembaruan Wajib Tersedia',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Versi baru aplikasi telah tersedia. Silakan lakukan pembaruan untuk dapat terus menggunakan aplikasi.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      SystemNavigator.pop();
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.textSecondary,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Keluar',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final uri = Uri.parse(updateUrl);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Update',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _initVersion() async {

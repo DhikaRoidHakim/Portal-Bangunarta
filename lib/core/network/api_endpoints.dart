@@ -16,6 +16,9 @@ class ApiEndpoints {
     return isProduction ? _prodBaseUrl : _devBaseUrl;
   }
 
+  // Endpoints System
+  static const String appConfig = 'api/Bangunarta-one';
+
   // Endpoints Authentication
   static const String login = '/api/jwt-auth';
   static const String me = '/api/jwt-me';

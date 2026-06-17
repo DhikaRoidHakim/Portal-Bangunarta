@@ -1,5 +1,6 @@
 import 'package:bangunarta_portal/core/network/api_endpoints.dart';
 import 'package:bangunarta_portal/core/network/dio_client.dart';
+import 'package:bangunarta_portal/models/auth/app_config_model.dart';
 import 'package:bangunarta_portal/models/auth/auth_me_model.dart';
 import 'package:bangunarta_portal/models/auth/auth_token_model.dart';
 import 'package:dio/dio.dart';
@@ -196,6 +197,33 @@ class AuthRepository {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _tokenTypeKey);
     await _storage.delete(key: _expiresInKey);
+  }
+
+  Future<AppConfigModel> getAppConfig() async {
+    try {
+      final path = ApiEndpoints.appConfig.startsWith('/')
+          ? ApiEndpoints.appConfig
+          : '/${ApiEndpoints.appConfig}';
+
+      final response = await _dio.get(path);
+      final responseData = response.data;
+
+      if (responseData is! Map<String, dynamic>) {
+        throw Exception('Format response app config tidak valid');
+      }
+
+      final isSuccess = responseData['success'] == true;
+      final data = responseData['data'];
+
+      if (!isSuccess || data is! Map<String, dynamic>) {
+        throw Exception('Gagal mengambil app config');
+      }
+
+      return AppConfigModel.fromJson(data);
+    } on DioException catch (error) {
+      final message = _getDioErrorMessage(error);
+      throw Exception(message);
+    }
   }
 
   String _getDioErrorMessage(DioException error) {
