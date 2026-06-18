@@ -2,7 +2,7 @@ import 'package:bangunarta_portal/core/services/remote_config_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiEndpoints {
-  static const bool isProduction = false;
+  static const bool isProduction = true;
 
   /// URL dari .env sebagai fallback
   static String get _devBaseUrl => dotenv.env['DEV_BASE_URL'] ?? '';
@@ -39,4 +39,5 @@ class ApiEndpoints {
   // Endpoints Samba
   static const String listSimpanan = '/api/samba/simpanan';
   static const String transaksiSimpanan = '/api/samba/transaksi';
+  static const String cetakTransaksi = '/api/samba/cetak';
 }

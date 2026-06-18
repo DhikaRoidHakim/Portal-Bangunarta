@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
 import 'package:bangunarta_portal/features/samba/services/thermal_printer_service.dart';
 import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
+import 'package:image/image.dart' as img;
 
 /// Bottom sheet untuk memilih printer dan menjalankan cetak
-class PrinterSelectionSheet extends StatefulWidget {
-  final TransactionData transactionData;
+class PrinterSelectionSheet extends ConsumerStatefulWidget {
+  final int transactionId;
 
-  const PrinterSelectionSheet({super.key, required this.transactionData});
+  const PrinterSelectionSheet({super.key, required this.transactionId});
 
   @override
-  State<PrinterSelectionSheet> createState() => _PrinterSelectionSheetState();
+  ConsumerState<PrinterSelectionSheet> createState() =>
+      _PrinterSelectionSheetState();
 }
 
-class _PrinterSelectionSheetState extends State<PrinterSelectionSheet> {
+class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
   List<BluetoothInfo> _devices = [];
   bool _isLoading = true;
   bool _isPrinting = false;
@@ -39,8 +43,7 @@ class _PrinterSelectionSheetState extends State<PrinterSelectionSheet> {
     });
 
     // 1. Minta izin Bluetooth → memunculkan popup sistem Android
-    final permResult =
-        await ThermalPrinterService.requestBluetoothPermission();
+    final permResult = await ThermalPrinterService.requestBluetoothPermission();
 
     if (permResult == BluetoothPermissionResult.permanentlyDenied) {
       setState(() {
@@ -93,6 +96,23 @@ class _PrinterSelectionSheetState extends State<PrinterSelectionSheet> {
       _errorType = null;
     });
 
+    // Hit endpoint cetak terlebih dahulu untuk menambah counter cetak
+    // dan mendapatkan data terbaru dari server
+    TransactionData txData;
+    try {
+      final cetakResult = await ref.read(
+        cetakTransactionProvider(widget.transactionId).future,
+      );
+      txData = cetakResult.data;
+    } catch (_) {
+      setState(() {
+        _isPrinting = false;
+        _errorType = _ErrorType.printFailed;
+        _errorMessage = 'Gagal mengambil data cetak dari server.';
+      });
+      return;
+    }
+
     final connected = await ThermalPrinterService.connect(device.macAdress);
     if (!connected) {
       setState(() {
@@ -106,9 +126,7 @@ class _PrinterSelectionSheetState extends State<PrinterSelectionSheet> {
 
     setState(() => _connectedMac = device.macAdress);
 
-    final printed = await ThermalPrinterService.printTransactionReceipt(
-      widget.transactionData,
-    );
+    final printed = await ThermalPrinterService.printTransactionReceipt(txData);
 
     await ThermalPrinterService.disconnect();
 
@@ -150,8 +168,11 @@ class _PrinterSelectionSheetState extends State<PrinterSelectionSheet> {
           ),
           child: const Row(
             children: [
-              Icon(Icons.check_circle_rounded,
-                  color: Color(0xFF16A34A), size: 22),
+              Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF16A34A),
+                size: 22,
+              ),
               SizedBox(width: 12),
               Text(
                 'Cetak berhasil!',
@@ -171,7 +192,7 @@ class _PrinterSelectionSheetState extends State<PrinterSelectionSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
+    
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -416,8 +437,11 @@ class _PrinterSelectionSheetState extends State<PrinterSelectionSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline_rounded,
-                      color: Colors.redAccent, size: 18),
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    color: Colors.redAccent,
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(

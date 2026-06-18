@@ -196,4 +196,28 @@ class SambaRepository {
 
     return 'Terjadi kesalahan saat memuat data simpanan';
   }
+
+  // Cetak Transaksi Berdasarkan ID
+  Future<TransactionResponseModel> getCetakTransaksi(int transactionId) async {
+    try {
+      final respnse = await DioClient.instance.dio.get(
+        '${ApiEndpoints.cetakTransaksi}/$transactionId',
+      );
+
+      final responseData = respnse.data;
+      if (responseData is! Map<String, dynamic>) {
+        throw Exception('Format response cetak transaksi tidak valid');
+      }
+
+      final isSuccess = responseData['success'] == true;
+      if (!isSuccess) {
+        throw Exception(responseData['message'] ?? 'Gagal mencetak transaksi');
+      }
+
+      return TransactionResponseModel.fromJson(responseData);
+    } on DioException catch (error) {
+      final message = _getDioErrorMessage(error);
+      throw Exception(message);
+    }
+  }
 }

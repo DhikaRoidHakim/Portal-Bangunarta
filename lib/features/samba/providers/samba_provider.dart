@@ -51,8 +51,7 @@ class SambaSearchQuery extends Notifier<String> {
 }
 
 /// Provider untuk query pencarian Samba.
-final sambaSearchQueryProvider =
-    NotifierProvider<SambaSearchQuery, String>(() {
+final sambaSearchQueryProvider = NotifierProvider<SambaSearchQuery, String>(() {
   return SambaSearchQuery();
 });
 
@@ -91,7 +90,9 @@ class SambaSimpananNotifier extends AsyncNotifier<SambaSimpananState> {
   /// Memuat halaman berikutnya berdasarkan cursor saat ini
   Future<void> loadMore() async {
     final currentState = state.asData?.value;
-    if (currentState == null || currentState.isLoadingMore || !currentState.hasMore) {
+    if (currentState == null ||
+        currentState.isLoadingMore ||
+        !currentState.hasMore) {
       return;
     }
 
@@ -103,7 +104,9 @@ class SambaSimpananNotifier extends AsyncNotifier<SambaSimpananState> {
       final collectorCode = authState.user?.user.collectorCode;
 
       if (collectorCode == null || collectorCode.isEmpty) {
-        throw Exception('Kode kolektor tidak ditemukan. Silakan login kembali.');
+        throw Exception(
+          'Kode kolektor tidak ditemukan. Silakan login kembali.',
+        );
       }
 
       final searchQuery = ref.read(sambaSearchQueryProvider);
@@ -114,15 +117,20 @@ class SambaSimpananNotifier extends AsyncNotifier<SambaSimpananState> {
         cursor: currentState.nextCursor,
       );
 
-      final updatedItems = <SimpananModel>[...currentState.items, ...model.data];
+      final updatedItems = <SimpananModel>[
+        ...currentState.items,
+        ...model.data,
+      ];
 
-      state = AsyncValue.data(SambaSimpananState(
-        items: updatedItems,
-        total: model.total,
-        nextCursor: model.nextCursor,
-        hasMore: model.hasMore,
-        isLoadingMore: false,
-      ));
+      state = AsyncValue.data(
+        SambaSimpananState(
+          items: updatedItems,
+          total: model.total,
+          nextCursor: model.nextCursor,
+          hasMore: model.hasMore,
+          isLoadingMore: false,
+        ),
+      );
     } catch (e) {
       // Kembalikan status loading more ke false jika terjadi error
       state = AsyncValue.data(currentState.copyWith(isLoadingMore: false));
@@ -133,14 +141,14 @@ class SambaSimpananNotifier extends AsyncNotifier<SambaSimpananState> {
 /// Provider untuk mengelola status list simpanan Samba dengan pagination.
 final sambaSimpananNotifierProvider =
     AsyncNotifierProvider<SambaSimpananNotifier, SambaSimpananState>(() {
-  return SambaSimpananNotifier();
-});
+      return SambaSimpananNotifier();
+    });
 
 /// Provider untuk mengambil detail simpanan berdasarkan nomor rekening
 final detailSimpananProvider = FutureProvider.autoDispose
     .family<DetailSimpananModel, String>((ref, nomorRekening) async {
-  return SambaRepository.instance.getDetailSimpanan(nomorRekening);
-});
+      return SambaRepository.instance.getDetailSimpanan(nomorRekening);
+    });
 
 // State untuk daftar transaksi Samba yang mendukung pagination
 class SambaTransaksiState {
@@ -184,8 +192,8 @@ class SambaTransaksiSearchQuery extends Notifier<String> {
 /// Provider untuk query pencarian transaksi Samba.
 final sambaTransaksiSearchQueryProvider =
     NotifierProvider<SambaTransaksiSearchQuery, String>(() {
-  return SambaTransaksiSearchQuery();
-});
+      return SambaTransaksiSearchQuery();
+    });
 
 /// Notifier Async yang mengelola pengambilan daftar transaksi (pagination)
 class SambaTransaksiNotifier extends AsyncNotifier<SambaTransaksiState> {
@@ -220,7 +228,9 @@ class SambaTransaksiNotifier extends AsyncNotifier<SambaTransaksiState> {
   /// Memuat halaman berikutnya berdasarkan cursor saat ini
   Future<void> loadMore() async {
     final currentState = state.asData?.value;
-    if (currentState == null || currentState.isLoadingMore || !currentState.hasMore) {
+    if (currentState == null ||
+        currentState.isLoadingMore ||
+        !currentState.hasMore) {
       return;
     }
 
@@ -232,7 +242,9 @@ class SambaTransaksiNotifier extends AsyncNotifier<SambaTransaksiState> {
       final collectorCode = authState.user?.user.collectorCode;
 
       if (collectorCode == null || collectorCode.isEmpty) {
-        throw Exception('Kode kolektor tidak ditemukan. Silakan login kembali.');
+        throw Exception(
+          'Kode kolektor tidak ditemukan. Silakan login kembali.',
+        );
       }
 
       final searchQuery = ref.read(sambaTransaksiSearchQueryProvider);
@@ -243,14 +255,19 @@ class SambaTransaksiNotifier extends AsyncNotifier<SambaTransaksiState> {
         cursor: currentState.nextCursor,
       );
 
-      final updatedItems = <SambaTransactionModel>[...currentState.items, ...model.data];
+      final updatedItems = <SambaTransactionModel>[
+        ...currentState.items,
+        ...model.data,
+      ];
 
-      state = AsyncValue.data(SambaTransaksiState(
-        items: updatedItems,
-        nextCursor: model.nextCursor,
-        hasMore: model.hasMore,
-        isLoadingMore: false,
-      ));
+      state = AsyncValue.data(
+        SambaTransaksiState(
+          items: updatedItems,
+          nextCursor: model.nextCursor,
+          hasMore: model.hasMore,
+          isLoadingMore: false,
+        ),
+      );
     } catch (e) {
       // Kembalikan status loading more ke false jika terjadi error
       state = AsyncValue.data(currentState.copyWith(isLoadingMore: false));
@@ -261,11 +278,17 @@ class SambaTransaksiNotifier extends AsyncNotifier<SambaTransaksiState> {
 /// Provider untuk mengelola daftar transaksi Samba.
 final sambaTransaksiNotifierProvider =
     AsyncNotifierProvider<SambaTransaksiNotifier, SambaTransaksiState>(() {
-  return SambaTransaksiNotifier();
-});
+      return SambaTransaksiNotifier();
+    });
 
 /// Provider untuk mengambil detail transaksi berdasarkan ID
 final detailSimpananTransactionProvider = FutureProvider.autoDispose
     .family<TransactionResponseModel, int>((ref, transactionId) async {
-  return SambaRepository.instance.getDetailTransaksi(transactionId);
-});
+      return SambaRepository.instance.getDetailTransaksi(transactionId);
+    });
+
+/// Provider untuk cetak transaksi berdasarkan ID
+final cetakTransactionProvider = FutureProvider.autoDispose
+    .family<TransactionResponseModel, int>((ref, transactionId) async {
+      return SambaRepository.instance.getCetakTransaksi(transactionId);
+    });

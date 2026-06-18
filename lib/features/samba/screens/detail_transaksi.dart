@@ -53,7 +53,8 @@ class DetailTransaksiScreen extends ConsumerWidget {
         error: (error, stack) => _buildErrorState(context, ref, error),
       ),
       bottomNavigationBar: detailAsync.whenOrNull(
-        data: (detail) => _buildBottomBar(context, detail.data),
+        data: (detail) =>
+            _buildBottomBar(context, detail.data.id, detail.data.cetak),
       ),
     );
   }
@@ -467,7 +468,9 @@ class DetailTransaksiScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, TransactionData tx) {
+  Widget _buildBottomBar(BuildContext context, int txId, int cetak) {
+    final isBlocked = cetak >= 2;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -479,61 +482,151 @@ class DetailTransaksiScreen extends ConsumerWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: SafeArea(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primaryColor.withValues(alpha: 0.35),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _showPrinterSheet(context, tx),
-              borderRadius: BorderRadius.circular(14),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 15),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isBlocked)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.print_rounded, color: Colors.white, size: 20),
-                    SizedBox(width: 10),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 14,
+                      color: Colors.red.shade400,
+                    ),
+                    const SizedBox(width: 6),
                     Text(
-                      'Cetak Bukti Transaksi',
+                      'Resi telah dicetak 2x, tidak bisa mencetak lagi',
                       style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: 0.3,
+                        fontSize: 12,
+                        color: Colors.red.shade400,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: isBlocked
+                    ? null
+                    : const LinearGradient(
+                        colors: [
+                          AppTheme.primaryColor,
+                          AppTheme.secondaryColor,
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                color: isBlocked ? const Color(0xFFCBD5E1) : null,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: isBlocked
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.35),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: isBlocked
+                      ? () => _showBlockedSnackbar(context)
+                      : () => _showPrinterSheet(context, txId),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isBlocked
+                              ? Icons.print_disabled_rounded
+                              : Icons.print_rounded,
+                          color: isBlocked
+                              ? Colors.white.withValues(alpha: 0.7)
+                              : Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Cetak Bukti Transaksi',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: isBlocked
+                                ? Colors.white.withValues(alpha: 0.7)
+                                : Colors.white,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBlockedSnackbar(BuildContext context) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        duration: const Duration(seconds: 3),
+        content: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFEF2F2),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFFECACA), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.print_disabled_rounded,
+                color: Color(0xFFDC2626),
+                size: 22,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Resi telah dicetak 2x, tidak bisa mencetak lagi',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFB91C1C),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  void _showPrinterSheet(BuildContext context, TransactionData tx) {
+  void _showPrinterSheet(BuildContext context, int txId) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => PrinterSelectionSheet(transactionData: tx),
+      builder: (_) => PrinterSelectionSheet(transactionId: txId),
     );
   }
 }

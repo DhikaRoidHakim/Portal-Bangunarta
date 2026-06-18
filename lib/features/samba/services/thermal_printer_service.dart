@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
+import 'package:image/image.dart' as img;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
@@ -8,8 +11,6 @@ import 'package:intl/intl.dart';
 enum BluetoothPermissionResult { granted, denied, permanentlyDenied }
 
 class ThermalPrinterService {
-  /// Meminta izin Bluetooth (BLUETOOTH_CONNECT dan BLUETOOTH_SCAN)
-  /// Mengembalikan [BluetoothPermissionResult]
   static Future<BluetoothPermissionResult> requestBluetoothPermission() async {
     final statuses = await [
       Permission.bluetoothConnect,
@@ -108,7 +109,7 @@ class ThermalPrinterService {
 
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
-      symbol: 'Rp ',
+      symbol: 'Rp',
       decimalDigits: 0,
     );
 
@@ -116,9 +117,37 @@ class ThermalPrinterService {
     bytes.addAll(generator.reset());
     bytes.addAll(generator.setGlobalFont(PosFontType.fontA));
 
+    // ── Logo ─────────────────────────────────────────────
+    try {
+      final ByteData logoData = await rootBundle.load(
+        'assets/images/logo_polos.png',
+      );
+      final Uint8List logoRawBytes = logoData.buffer.asUint8List();
+      img.Image? logoImage = img.decodeImage(logoRawBytes);
+      if (logoImage != null) {
+        // Jika PNG punya alpha (transparan), composite di atas background putih
+        if (logoImage.numChannels == 4) {
+          final bg = img.Image(
+            width: logoImage.width,
+            height: logoImage.height,
+            numChannels: 3,
+          );
+          img.fill(bg, color: img.ColorRgb8(255, 255, 255));
+          logoImage = img.compositeImage(bg, logoImage);
+        }
+        // Resize dan convert ke grayscale (wajib untuk ESC/POS)
+        final resized = img.copyResize(logoImage, width: 150);
+        final grayscale = img.grayscale(resized);
+        bytes.addAll(generator.imageRaster(grayscale, align: PosAlign.center));
+      }
+    } catch (e) {
+      // ignore logo error, lanjut cetak teks
+    }
+    bytes.addAll(generator.reset());
+
     bytes.addAll(
       generator.text(
-        'KOPERASI BANGUNARTA',
+        'BPR BANGUNARTA',
         styles: PosStyles(
           align: PosAlign.center,
           bold: true,
@@ -131,117 +160,177 @@ class ThermalPrinterService {
 
     bytes.addAll(
       generator.text(
-        'BUKTI TRANSAKSI',
-        styles: PosStyles(align: PosAlign.center, bold: true),
-        linesAfter: 0,
-      ),
-    );
-
-    bytes.addAll(generator.hr(ch: '-'));
-
-    // ── Jenis Transaksi & Nominal ────────────────────────
-    bytes.addAll(
-      generator.text(
-        'Setoran Tunai',
-        styles: PosStyles(align: PosAlign.center, bold: true),
-        linesAfter: 0,
-      ),
-    );
-
-    bytes.addAll(
-      generator.text(
-        formatter.format(tx.nominal),
-        styles: PosStyles(
-          align: PosAlign.center,
-          bold: true,
-          height: PosTextSize.size2,
-          width: PosTextSize.size2,
-        ),
-        linesAfter: 0,
-      ),
-    );
-
-    bytes.addAll(
-      generator.text(
-        tx.status,
+        'Jl. H. Iksan No. 89 Mulyasari, ',
         styles: PosStyles(align: PosAlign.center),
-        linesAfter: 1,
+        linesAfter: 0,
+      ),
+    );
+
+    bytes.addAll(generator.reset());
+    bytes.addAll(
+      generator.text(
+        'Pamanukan',
+        styles: PosStyles(align: PosAlign.center),
+        linesAfter: 0,
+      ),
+    );
+
+    bytes.addAll(generator.reset());
+    bytes.addAll(
+      generator.text(
+        'Telepon: (0260) 550500',
+        styles: PosStyles(align: PosAlign.center),
+        linesAfter: 0,
+      ),
+    );
+
+    bytes.addAll(generator.reset());
+    bytes.addAll(
+      generator.text(
+        'www.bprbangunarta.co.id',
+        styles: PosStyles(align: PosAlign.center),
+        linesAfter: 0,
       ),
     );
 
     bytes.addAll(generator.hr(ch: '-'));
 
-    // ── Informasi Transaksi ──────────────────────────────
+    // ── Tanggal & No. Referensi ──────────────────────────
+    bytes.addAll(generator.reset());
+
     bytes.addAll(
-      generator.text(
-        'INFORMASI TRANSAKSI',
-        styles: PosStyles(bold: true),
-        linesAfter: 0,
-      ),
+      generator.row([
+        PosColumn(
+          text: 'Tanggal',
+          width: 4,
+          styles: const PosStyles(align: PosAlign.left),
+        ),
+        PosColumn(
+          text: tx.waktu,
+          width: 8,
+          styles: const PosStyles(align: PosAlign.right),
+        ),
+      ]),
+    );
+    bytes.addAll(generator.reset());
+
+    bytes.addAll(
+      generator.row([
+        PosColumn(
+          text: 'No. Referensi',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.left),
+        ),
+        PosColumn(
+          text: tx.kode,
+          width: 6,
+          styles: const PosStyles(align: PosAlign.right),
+        ),
+      ]),
     );
 
-    bytes.addAll(_buildRow(generator, 'No. Dokumen', tx.kode));
-    bytes.addAll(_buildRow(generator, 'Waktu', tx.waktu));
-
-    bytes.addAll(generator.emptyLines(1));
     bytes.addAll(generator.hr(ch: '-'));
 
-    // ── Data Nasabah ─────────────────────────────────────
+    // ── Nama Nasabah & Nomor Rekening ────────────────────
+    bytes.addAll(generator.reset());
+
     bytes.addAll(
       generator.text(
-        'DATA NASABAH',
-        styles: PosStyles(bold: true),
+        tx.namaLengkap,
+        styles: PosStyles(align: PosAlign.center, bold: true),
         linesAfter: 0,
       ),
     );
 
-    bytes.addAll(_buildRow(generator, 'No. Rekening', tx.nomorRekening));
-    bytes.addAll(_buildRow(generator, 'Nama', tx.namaLengkap));
+    bytes.addAll(generator.reset());
 
-    if (tx.namaPenyetor != null && tx.namaPenyetor!.isNotEmpty) {
-      bytes.addAll(_buildRow(generator, 'Penyetor', tx.namaPenyetor!));
-    }
+    bytes.addAll(
+      generator.text(
+        tx.nomorRekening,
+        styles: PosStyles(align: PosAlign.center, bold: true),
+        linesAfter: 0,
+      ),
+    );
 
-    bytes.addAll(generator.emptyLines(1));
     bytes.addAll(generator.hr(ch: '-'));
 
-    // ── Keterangan ───────────────────────────────────────
+    // ── Header Tabel ─────────────────────────────────────
     bytes.addAll(
-      generator.text(
-        'KETERANGAN',
-        styles: PosStyles(bold: true),
-        linesAfter: 0,
-      ),
+      generator.row([
+        PosColumn(
+          text: 'Keterangan',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.left, bold: true),
+        ),
+        PosColumn(
+          text: 'Nominal',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.right, bold: true),
+        ),
+      ]),
     );
 
-    if (tx.deskripsi.isNotEmpty) {
-      bytes.addAll(_buildRow(generator, 'Deskripsi', tx.deskripsi));
-    }
+    bytes.addAll(generator.hr(ch: '-'));
 
-    bytes.addAll(_buildRow(generator, 'Kantor', tx.kantorPetugas));
-    bytes.addAll(_buildRow(generator, 'Petugas', tx.namaPetugas));
+    // ── Jumlah Setoran ───────────────────────────────────
+    bytes.addAll(
+      generator.row([
+        PosColumn(
+          text: 'Jumlah Setoran',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.left),
+        ),
+        PosColumn(
+          text: formatter.format(tx.nominal),
+          width: 6,
+          styles: const PosStyles(align: PosAlign.right),
+        ),
+      ]),
+    );
 
-    bytes.addAll(generator.emptyLines(1));
-    bytes.addAll(generator.hr(ch: '='));
+    // ── Biaya Admin ──────────────────────────────────────
+    bytes.addAll(
+      generator.row([
+        PosColumn(
+          text: 'Biaya Admin',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.left),
+        ),
+        PosColumn(
+          text: 'Rp0',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.right),
+        ),
+      ]),
+    );
+
+    bytes.addAll(generator.hr(ch: '-'));
 
     // ── Footer ───────────────────────────────────────────
     bytes.addAll(
       generator.text(
-        'Terima kasih telah menggunakan',
+        'Apabila terjadi ketidaksesuaian, harap',
         styles: PosStyles(align: PosAlign.center),
         linesAfter: 0,
       ),
     );
     bytes.addAll(
       generator.text(
-        'layanan kami.',
+        'segera menghubungi kami untuk',
         styles: PosStyles(align: PosAlign.center),
         linesAfter: 0,
       ),
     );
     bytes.addAll(
       generator.text(
-        'Simpan bukti ini dengan baik.',
+        'penyelesaian. Terima kasih atas perhatian',
+        styles: PosStyles(align: PosAlign.center),
+        linesAfter: 0,
+      ),
+    );
+    bytes.addAll(
+      generator.text(
+        'Anda.',
         styles: PosStyles(align: PosAlign.center),
         linesAfter: 1,
       ),
@@ -250,40 +339,5 @@ class ThermalPrinterService {
     bytes.addAll(generator.feed(3));
 
     return bytes;
-  }
-
-  /// Helper untuk baris label: value (otomatis wrap jika panjang)
-  static List<int> _buildRow(Generator generator, String label, String value) {
-    if (value.length <= 16) {
-      return generator.row([
-        PosColumn(
-          text: label,
-          width: 6,
-          styles: const PosStyles(align: PosAlign.left),
-        ),
-        PosColumn(
-          text: ': $value',
-          width: 6,
-          styles: const PosStyles(align: PosAlign.left),
-        ),
-      ]);
-    } else {
-      final List<int> result = [];
-      result.addAll(
-        generator.text(
-          '$label :',
-          styles: const PosStyles(align: PosAlign.left),
-          linesAfter: 0,
-        ),
-      );
-      result.addAll(
-        generator.text(
-          value,
-          styles: const PosStyles(align: PosAlign.left),
-          linesAfter: 0,
-        ),
-      );
-      return result;
-    }
   }
 }
