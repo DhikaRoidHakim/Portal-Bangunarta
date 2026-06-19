@@ -4,6 +4,8 @@ import 'package:bangunarta_portal/models/samba/list_simpanan_model.dart';
 import 'package:bangunarta_portal/models/samba/detail_simpanan_model.dart';
 import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
 import 'package:bangunarta_portal/models/samba/list_transaksi_model.dart';
+import 'package:bangunarta_portal/models/samba/cetak_simpanan_model.dart';
+
 import 'package:dio/dio.dart';
 
 class SambaRepository {
@@ -198,7 +200,7 @@ class SambaRepository {
   }
 
   // Cetak Transaksi Berdasarkan ID
-  Future<TransactionResponseModel> getCetakTransaksi(int transactionId) async {
+  Future<CetakSimpananModel> getCetakTransaksi(int transactionId) async {
     try {
       final respnse = await DioClient.instance.dio.get(
         '${ApiEndpoints.cetakTransaksi}/$transactionId',
@@ -214,7 +216,7 @@ class SambaRepository {
         throw Exception(responseData['message'] ?? 'Gagal mencetak transaksi');
       }
 
-      return TransactionResponseModel.fromJson(responseData);
+      return CetakSimpananModel.fromJson(responseData);
     } on DioException catch (error) {
       final message = _getDioErrorMessage(error);
       throw Exception(message);

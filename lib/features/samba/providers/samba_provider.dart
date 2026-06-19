@@ -5,6 +5,7 @@ import 'package:bangunarta_portal/models/samba/list_simpanan_model.dart';
 import 'package:bangunarta_portal/models/samba/detail_simpanan_model.dart';
 import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
 import 'package:bangunarta_portal/models/samba/list_transaksi_model.dart';
+import 'package:bangunarta_portal/models/samba/cetak_simpanan_model.dart';
 import 'package:bangunarta_portal/features/samba/repository/samba_repository.dart';
 
 // State untuk daftar simpanan Samba yang mendukung pagination
@@ -153,12 +154,14 @@ final detailSimpananProvider = FutureProvider.autoDispose
 // State untuk daftar transaksi Samba yang mendukung pagination
 class SambaTransaksiState {
   final List<SambaTransactionModel> items;
+  final List<SambaSummaryModel> summary;
   final String? nextCursor;
   final bool hasMore;
   final bool isLoadingMore;
 
   const SambaTransaksiState({
     required this.items,
+    required this.summary,
     this.nextCursor,
     required this.hasMore,
     this.isLoadingMore = false,
@@ -166,12 +169,14 @@ class SambaTransaksiState {
 
   SambaTransaksiState copyWith({
     List<SambaTransactionModel>? items,
+    List<SambaSummaryModel>? summary,
     String? nextCursor,
     bool? hasMore,
     bool? isLoadingMore,
   }) {
     return SambaTransaksiState(
       items: items ?? this.items,
+      summary: summary ?? this.summary,
       nextCursor: nextCursor ?? this.nextCursor,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
@@ -205,6 +210,7 @@ class SambaTransaksiNotifier extends AsyncNotifier<SambaTransaksiState> {
     if (collectorCode == null || collectorCode.isEmpty) {
       return const SambaTransaksiState(
         items: [],
+        summary: [],
         hasMore: false,
         isLoadingMore: false,
       );
@@ -219,6 +225,7 @@ class SambaTransaksiNotifier extends AsyncNotifier<SambaTransaksiState> {
 
     return SambaTransaksiState(
       items: model.data,
+      summary: model.dataSummary,
       nextCursor: model.nextCursor,
       hasMore: model.hasMore,
       isLoadingMore: false,
@@ -263,6 +270,7 @@ class SambaTransaksiNotifier extends AsyncNotifier<SambaTransaksiState> {
       state = AsyncValue.data(
         SambaTransaksiState(
           items: updatedItems,
+          summary: model.dataSummary,
           nextCursor: model.nextCursor,
           hasMore: model.hasMore,
           isLoadingMore: false,
@@ -289,6 +297,6 @@ final detailSimpananTransactionProvider = FutureProvider.autoDispose
 
 /// Provider untuk cetak transaksi berdasarkan ID
 final cetakTransactionProvider = FutureProvider.autoDispose
-    .family<TransactionResponseModel, int>((ref, transactionId) async {
+    .family<CetakSimpananModel, int>((ref, transactionId) async {
       return SambaRepository.instance.getCetakTransaksi(transactionId);
     });

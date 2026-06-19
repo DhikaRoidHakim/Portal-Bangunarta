@@ -1,3 +1,4 @@
+import 'package:bangunarta_portal/models/samba/cetak_simpanan_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -6,6 +7,8 @@ import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
 import 'package:bangunarta_portal/features/samba/services/thermal_printer_service.dart';
 import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
+import 'package:bangunarta_portal/models/samba/cetak_simpanan_model.dart';
+
 import 'package:image/image.dart' as img;
 
 /// Bottom sheet untuk memilih printer dan menjalankan cetak
@@ -98,11 +101,11 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
 
     // Hit endpoint cetak terlebih dahulu untuk menambah counter cetak
     // dan mendapatkan data terbaru dari server
-    TransactionData txData;
+    CetakSimpananData txData;
     try {
-      final cetakResult = await ref.read(
-        cetakTransactionProvider(widget.transactionId).future,
-      );
+      final cetakResult = await ref
+          .read(cetakTransactionProvider(widget.transactionId).future)
+          .timeout(const Duration(seconds: 10));
       txData = cetakResult.data;
     } catch (_) {
       setState(() {
@@ -192,7 +195,7 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,

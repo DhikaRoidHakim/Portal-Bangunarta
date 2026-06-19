@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:bangunarta_portal/models/samba/cetak_simpanan_model.dart';
 import 'package:flutter/services.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:image/image.dart' as img;
@@ -85,7 +86,7 @@ class ThermalPrinterService {
 
   /// Cetak bukti transaksi
   static Future<bool> printTransactionReceipt(
-    TransactionData tx, {
+    CetakSimpananData tx, {
     PaperSize paperSize = PaperSize.mm58,
   }) async {
     try {
@@ -100,7 +101,7 @@ class ThermalPrinterService {
   }
 
   static Future<List<int>> _buildReceiptBytes(
-    TransactionData tx, {
+    CetakSimpananData tx, {
     PaperSize paperSize = PaperSize.mm58,
   }) async {
     final profile = await CapabilityProfile.load();
@@ -273,6 +274,22 @@ class ThermalPrinterService {
     bytes.addAll(generator.hr(ch: '-'));
 
     // ── Jumlah Setoran ───────────────────────────────────
+    bytes.addAll(generator.reset());
+    bytes.addAll(
+      generator.row([
+        PosColumn(
+          text: 'Saldo Tabungan',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.left),
+        ),
+        PosColumn(
+          text: formatter.format(tx.saldoAwal),
+          width: 6,
+          styles: const PosStyles(align: PosAlign.right),
+        ),
+      ]),
+    );
+
     bytes.addAll(
       generator.row([
         PosColumn(
@@ -305,37 +322,44 @@ class ThermalPrinterService {
     );
 
     bytes.addAll(generator.hr(ch: '-'));
+    // ── Saldo Akhir ──────────────────────────────────────
+
+    bytes.addAll(generator.reset());
+
+    bytes.addAll(
+      generator.row([
+        PosColumn(
+          text: 'Saldo Akhir',
+          width: 6,
+          styles: const PosStyles(align: PosAlign.left),
+        ),
+        PosColumn(
+          text: formatter.format(tx.saldoAkhir),
+          width: 6,
+          styles: const PosStyles(align: PosAlign.right),
+        ),
+      ]),
+    );
+
+    bytes.addAll(generator.hr(ch: '-'));
 
     // ── Footer ───────────────────────────────────────────
     bytes.addAll(
       generator.text(
-        'Apabila terjadi ketidaksesuaian, harap',
+        'Apabila terjadi ketidaksesuaian, harap segera menghubungi kami, untuk penyelesaian.',
         styles: PosStyles(align: PosAlign.center),
         linesAfter: 0,
       ),
     );
-    bytes.addAll(
-      generator.text(
-        'segera menghubungi kami untuk',
-        styles: PosStyles(align: PosAlign.center),
-        linesAfter: 0,
-      ),
-    );
-    bytes.addAll(
-      generator.text(
-        'penyelesaian. Terima kasih atas perhatian',
-        styles: PosStyles(align: PosAlign.center),
-        linesAfter: 0,
-      ),
-    );
-    bytes.addAll(
-      generator.text(
-        'Anda.',
-        styles: PosStyles(align: PosAlign.center),
-        linesAfter: 1,
-      ),
-    );
+    bytes.addAll(generator.reset());
 
+    bytes.addAll(
+      generator.text(
+        'Terima kasih atas perhatian Anda.',
+        styles: PosStyles(align: PosAlign.center),
+        linesAfter: 0,
+      ),
+    );
     bytes.addAll(generator.feed(3));
 
     return bytes;

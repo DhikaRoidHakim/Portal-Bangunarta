@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
 import 'package:bangunarta_portal/features/samba/widgets/samba_skeletons.dart';
+
+String _toRupiah(String value) {
+  final number = num.tryParse(value) ?? 0;
+  return NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  ).format(number);
+}
 
 Widget buildStatCard({
   required String title,
@@ -27,8 +37,8 @@ Widget buildStatCard({
     child: Row(
       children: [
         Container(
-          width: 48,
-          height: 48,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             color: iconBackgroundColor,
             borderRadius: BorderRadius.circular(14),
@@ -61,7 +71,7 @@ Widget buildStatCard({
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textPrimary,
                 ),
@@ -99,19 +109,17 @@ Widget buildBerandaBody() {
       );
 
       final successTxCount = transaksiState.maybeWhen(
-        data: (t) => t.items
-            .where((item) => item.status != 'Belum Diotorisasi')
-            .length
-            .toString(),
-        orElse: () => '0',
+        data: (t) => t.summary.isNotEmpty
+            ? _toRupiah(t.summary.first.success)
+            : _toRupiah('0'),
+        orElse: () => _toRupiah('0'),
       );
 
       final pendingTxCount = transaksiState.maybeWhen(
-        data: (t) => t.items
-            .where((item) => item.status == 'Belum Diotorisasi')
-            .length
-            .toString(),
-        orElse: () => '0',
+        data: (t) => t.summary.isNotEmpty
+            ? _toRupiah(t.summary.first.pending)
+            : _toRupiah('0'),
+        orElse: () => _toRupiah('0'),
       );
 
       final latestTx = transaksiState.maybeWhen(

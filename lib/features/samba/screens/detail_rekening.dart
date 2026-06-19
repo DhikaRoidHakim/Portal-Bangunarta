@@ -515,6 +515,26 @@ class _DetailRekeningScreenState extends ConsumerState<DetailRekeningScreen>
                 value: data.nomorCif,
               ),
               _InfoItem(
+                icon: Icons.money,
+                label: 'Saldo Minimum',
+                value: _formatCurrency(data.saldoMinimum),
+              ),
+              _InfoItem(
+                icon: Icons.money,
+                label: 'Saldo Efektif',
+                value: _formatCurrency(data.saldoEfektif),
+              ),
+              _InfoItem(
+                icon: Icons.money,
+                label: 'Saldo Blokir',
+                value: _formatCurrency(data.saldoBlokir),
+              ),
+              _InfoItem(
+                icon: Icons.money,
+                label: 'Saldo Total',
+                value: _formatCurrency(data.saldoTotal),
+              ),
+              _InfoItem(
                 icon: Icons.person_rounded,
                 label: 'Nama Lengkap',
                 value: data.namaLengkap,
