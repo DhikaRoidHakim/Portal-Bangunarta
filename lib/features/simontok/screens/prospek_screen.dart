@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/simontok/providers/simontok_provider.dart';
@@ -37,7 +38,9 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (mounted) {
-        ref.read(simontokProspekSearchQueryProvider.notifier).updateQuery(query);
+        ref
+            .read(simontokProspekSearchQueryProvider.notifier)
+            .updateQuery(query);
       }
     });
   }
@@ -75,20 +78,20 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
                   border: InputBorder.none,
                 ),
               )
-            : const Text(
+            : Text(
                 'PROSPEK',
                 style: TextStyle(
                   color: AppTheme.textWhite,
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
         leading: widget.showBackButton
             ? IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_ios_new,
                   color: Colors.white,
-                  size: 20,
+                  size: 20.sp,
                 ),
                 onPressed: () => Navigator.pop(context),
               )
@@ -98,12 +101,12 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
             icon: Icon(
               _isSearching ? Icons.close : Icons.search,
               color: Colors.white,
-              size: 24,
+              size: 24.sp,
             ),
             onPressed: _toggleSearch,
           ),
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.white, size: 24),
+            icon: Icon(Icons.add, color: Colors.white, size: 24.sp),
             onPressed: () => context.push('/simontok/tambah-prospek'),
           ),
         ],
@@ -122,18 +125,18 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
             },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
               itemCount: 1,
               itemBuilder: (context, index) {
                 return Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                     boxShadow: [
                       BoxShadow(
                         color: AppTheme.textPrimary.withValues(alpha: 0.05),
                         blurRadius: 10,
-                        offset: const Offset(0, 5),
+                        offset: Offset(0, 5.h),
                       ),
                     ],
                   ),
@@ -160,31 +163,35 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
     );
   }
 
-  Widget _buildProspekItem(BuildContext context, ProspekModel prospek, {bool isLast = false}) {
+  Widget _buildProspekItem(
+    BuildContext context,
+    ProspekModel prospek, {
+    bool isLast = false,
+  }) {
     return GestureDetector(
       onTap: () => _showActionBottomSheet(prospek),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             child: Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 40.w,
+                  height: 40.h,
                   decoration: const BoxDecoration(
                     color: Color(0xFF7F8C9D),
                     shape: BoxShape.circle,
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Icon(
                       Icons.person_outline,
                       color: Colors.white,
-                      size: 24,
+                      size: 24.sp,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,18 +200,17 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
                         prospek.namaLengkap,
                         style: TextStyle(
                           color: AppTheme.textPrimary,
-                          fontSize: 14,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w500,
-                        ).copyWith(
-                          color: AppTheme.secondaryColor,
-                        ),
+                        ).copyWith(color: AppTheme.secondaryColor),
                       ),
-                      if (prospek.nomorHp != null && prospek.nomorHp!.isNotEmpty) ...[
+                      if (prospek.nomorHp != null &&
+                          prospek.nomorHp!.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
                           prospek.nomorHp!,
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: TextStyle(
+                            fontSize: 12.sp,
                             color: AppTheme.textSecondary,
                           ),
                         ),
@@ -213,14 +219,17 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
                   ),
                 ),
                 if (prospek.status != null) ...[
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 3.h,
+                    ),
                     decoration: BoxDecoration(
                       color: prospek.status == 'Selesai'
                           ? const Color(0xFF10B981).withValues(alpha: 0.1)
                           : Colors.amber.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(
                       prospek.status!,
@@ -228,7 +237,7 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
                         color: prospek.status == 'Selesai'
                             ? const Color(0xFF10B981)
                             : Colors.amber.shade800,
-                        fontSize: 10,
+                        fontSize: 10.sp,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -238,11 +247,11 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
             ),
           ),
           if (!isLast)
-            const Divider(
+            Divider(
               color: AppTheme.inputBorder,
-              thickness: 0.5,
-              height: 0,
-              indent: 72,
+              thickness: 0.5.h,
+              height: 0.h,
+              indent: 72.w,
             ),
         ],
       ),
@@ -252,42 +261,42 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.r),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
                 color: AppTheme.primaryColor.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.trending_up_rounded,
                 color: AppTheme.primaryColor,
-                size: 56,
+                size: 56.sp,
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16.h),
+            Text(
               'Tidak Ada Prospek',
               style: TextStyle(
                 color: AppTheme.textPrimary,
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8.h),
+            Text(
               'Tidak ditemukan data prospek yang cocok atau aktif saat ini.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppTheme.textSecondary,
-                fontSize: 14,
-                height: 1.4,
+                fontSize: 14.sp,
+                height: 1.4.h,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: () {
                 ref.invalidate(listProspekProvider);
@@ -296,7 +305,7 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
               child: const Text('Segarkan'),
@@ -310,35 +319,35 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
   Widget _buildErrorState(String message) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.r),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline_rounded,
               color: Colors.redAccent,
-              size: 56,
+              size: 56.sp,
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16.h),
+            Text(
               'Gagal Memuat Prospek',
               style: TextStyle(
                 color: AppTheme.textPrimary,
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               message.replaceFirst('Exception: ', ''),
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textSecondary,
-                fontSize: 14,
-                height: 1.4,
+                fontSize: 14.sp,
+                height: 1.4.h,
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             ElevatedButton(
               onPressed: () {
                 ref.invalidate(listProspekProvider);
@@ -347,7 +356,7 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
               child: const Text('Coba Lagi'),
@@ -365,47 +374,47 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
                 child: Container(
-                  width: 44,
-                  height: 5,
+                  width: 44.w,
+                  height: 5.h,
                   decoration: BoxDecoration(
                     color: Colors.grey.withValues(alpha: .24),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(10.r),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               Text(
                 prospek.namaLengkap,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppTheme.textPrimary,
-                  fontSize: 18,
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               if (prospek.nomorHp != null && prospek.nomorHp!.isNotEmpty) ...[
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   prospek.nomorHp!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppTheme.textSecondary,
-                    fontSize: 13,
+                    fontSize: 13.sp,
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
+              SizedBox(height: 20.h),
+              Divider(height: 1.h),
+              SizedBox(height: 12.h),
               _buildBottomSheetItem(
                 icon: Icons.info_outline,
                 title: 'Detail Prospek',
@@ -452,24 +461,26 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(12.r),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(10.r),
               decoration: BoxDecoration(
-                color: (iconColor ?? AppTheme.primaryColor).withValues(alpha: 0.08),
+                color: (iconColor ?? AppTheme.primaryColor).withValues(
+                  alpha: 0.08,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 color: iconColor ?? AppTheme.primaryColor,
-                size: 20,
+                size: 20.sp,
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,26 +488,26 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.bold,
                       color: titleColor ?? AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2.h),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: TextStyle(
+                      fontSize: 12.sp,
                       color: AppTheme.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppTheme.textSecondary,
-              size: 20,
+              size: 20.sp,
             ),
           ],
         ),
@@ -510,20 +521,36 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
       builder: (dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
-              SizedBox(width: 8),
-              Text('Hapus Prospek?'),
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange,
+                size: 28.sp,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                'Hapus Prospek?',
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
-          content: Text('Apakah Anda yakin ingin menghapus prospek "${prospek.namaLengkap}"? Tindakan ini tidak dapat dibatalkan.'),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus prospek "${prospek.namaLengkap}"? Tindakan ini tidak dapat dibatalkan.',
+            style: TextStyle(fontSize: 14.sp),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+              child: Text(
+                'Batal',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -534,10 +561,10 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
                 backgroundColor: Colors.redAccent,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-              child: const Text('Ya, Hapus'),
+              child: Text('Ya, Hapus', style: TextStyle(fontSize: 14.sp)),
             ),
           ],
         );
@@ -560,33 +587,38 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
 
     Future(() async {
       try {
-        final response = await SimontokRepository.instance.deleteProspek(prospek.id);
-        
+        final response = await SimontokRepository.instance.deleteProspek(
+          prospek.id,
+        );
+
         if (!mounted) return;
         navigator.pop(); // Pop loading dialog
-        
+
         ref.invalidate(listProspekProvider);
-        
+
         showDialog(
           context: context,
           builder: (successContext) => AlertDialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
             ),
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 28),
-                SizedBox(width: 8),
-                Text('Berhasil'),
+                Icon(Icons.check_circle, color: Colors.green, size: 28.sp),
+                SizedBox(width: 8.w),
+                Text('Berhasil', style: TextStyle(fontSize: 14.sp)),
               ],
             ),
-            content: Text(response.message.isNotEmpty 
-                ? response.message 
-                : 'Prospek "${prospek.namaLengkap}" berhasil dihapus.'),
+            content: Text(
+              response.message.isNotEmpty
+                  ? response.message
+                  : 'Prospek "${prospek.namaLengkap}" berhasil dihapus.',
+              style: TextStyle(fontSize: 14.sp),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(successContext),
-                child: const Text('OK'),
+                child: Text('OK', style: TextStyle(fontSize: 14.sp)),
               ),
             ],
           ),
@@ -594,25 +626,28 @@ class _ProspekPageState extends ConsumerState<ProspekPage> {
       } catch (e) {
         if (!mounted) return;
         navigator.pop(); // Pop loading dialog
-        
+
         showDialog(
           context: context,
           builder: (errorContext) => AlertDialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
             ),
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.redAccent, size: 28),
-                SizedBox(width: 8),
-                Text('Gagal'),
+                Icon(Icons.error_outline, color: Colors.redAccent, size: 28.sp),
+                SizedBox(width: 8.w),
+                Text('Gagal', style: TextStyle(fontSize: 14.sp)),
               ],
             ),
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            content: Text(
+              e.toString().replaceFirst('Exception: ', ''),
+              style: TextStyle(fontSize: 14.sp),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(errorContext),
-                child: const Text('Tutup'),
+                child: Text('Tutup', style: TextStyle(fontSize: 14.sp)),
               ),
             ],
           ),

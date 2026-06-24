@@ -8,12 +8,24 @@ class ApiEndpoints {
   static String get _devBaseUrl => dotenv.env['DEV_BASE_URL'] ?? '';
   static String get _prodBaseUrl => dotenv.env['PROD_BASE_URL'] ?? '';
 
+  // static String get baseUrl {
+  //   final remoteUrl = RemoteConfigService().baseUrl;
+  //   if (isProduction) {
+  //     if (remoteUrl.isNotEmpty) {
+  //       return remoteUrl;
+  //     }
+  //     return isProduction ? _prodBaseUrl : _devBaseUrl;
+  //   } else {
+  //     return _devBaseUrl;
+  //   }
+  // }
+
   static String get baseUrl {
     final remoteUrl = RemoteConfigService().baseUrl;
-    if (remoteUrl.isNotEmpty) {
-      return remoteUrl;
+    if (isProduction) {
+      return remoteUrl.isNotEmpty ? remoteUrl : _prodBaseUrl;
     }
-    return isProduction ? _prodBaseUrl : _devBaseUrl;
+    return _devBaseUrl;
   }
 
   // Endpoints System

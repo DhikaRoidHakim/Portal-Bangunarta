@@ -2,10 +2,11 @@ import 'package:bangunarta_portal/features/samba/screens/open_account_screen.dar
 import 'package:bangunarta_portal/core/auth/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 // Screen
-import 'rekening_screen.dart';
-import 'transaksi_screen.dart';
+import 'package:bangunarta_portal/features/samba/screens/rekening_screen.dart';
+import 'package:bangunarta_portal/features/samba/screens/transaksi_screen.dart';
 
 // Widgets
 import 'package:bangunarta_portal/features/samba/widgets/samba_widgets.dart';
@@ -26,34 +27,37 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(24.r),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.construction_outlined,
                   color: AppTheme.primaryColor,
-                  size: 48,
+                  size: 48.sp,
                 ),
-                const SizedBox(height: 16),
-                const Text(
+                SizedBox(height: 16.h),
+                Text(
                   'Segera Hadir',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 10),
-                const Text(
+                SizedBox(height: 10.h),
+                Text(
                   'Fitur ini sedang dalam pengembangan dan akan segera hadir untuk Anda.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -62,10 +66,10 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
                       backgroundColor: AppTheme.primaryColor,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
                     ),
-                    child: const Text('Tutup'),
+                    child: Text('Tutup', style: TextStyle(fontSize: 14.sp)),
                   ),
                 ),
               ],
@@ -88,21 +92,25 @@ class _SambaHomeScreenState extends State<SambaHomeScreen> {
             false, // Menghilangkan back button bawaan jika ada
         title: Row(
           children: [
-            Image.asset('assets/images/logo_polos.png', width: 28, height: 28),
-            const SizedBox(width: 8),
-            const Text(
+            Image.asset(
+              'assets/images/logo_polos.png',
+              width: 28.w,
+              height: 28.h,
+            ),
+            SizedBox(width: 8.w),
+            Text(
               'BPR BANGUNARTA',
               style: TextStyle(
                 color: AppTheme.textPrimary,
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w800,
               ),
             ),
           ],
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: AppTheme.inputBorder, height: 1.0),
+          preferredSize: Size.fromHeight(1.0.h),
+          child: Container(color: AppTheme.inputBorder, height: 1.0.h),
         ),
       ),
       body: IndexedStack(

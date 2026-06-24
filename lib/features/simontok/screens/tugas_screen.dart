@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/simontok/providers/simontok_provider.dart';
 import 'package:bangunarta_portal/models/simontok/list_tugas_model.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class TugasPage extends ConsumerStatefulWidget {
   final bool showBackButton;
@@ -74,20 +75,20 @@ class _TugasPageState extends ConsumerState<TugasPage> {
                   border: InputBorder.none,
                 ),
               )
-            : const Text(
+            : Text(
                 'TUGAS PENANGANAN',
                 style: TextStyle(
                   color: AppTheme.textWhite,
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
         leading: widget.showBackButton
             ? IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_ios_new,
                   color: Colors.white,
-                  size: 20,
+                  size: 20.sp,
                 ),
                 onPressed: () => Navigator.pop(context),
               )
@@ -97,7 +98,7 @@ class _TugasPageState extends ConsumerState<TugasPage> {
             icon: Icon(
               _isSearching ? Icons.close : Icons.search,
               color: Colors.white,
-              size: 24,
+              size: 24.sp,
             ),
             onPressed: _toggleSearch,
           ),
@@ -117,15 +118,16 @@ class _TugasPageState extends ConsumerState<TugasPage> {
             },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
               itemCount: tasks.length,
               itemBuilder: (context, index) {
                 final task = tasks[index];
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.only(bottom: 12.h),
                   child: _TugasCard(
                     task: task,
-                    onTap: () => context.push('/simontok/buat-laporan', extra: task),
+                    onTap: () =>
+                        context.push('/simontok/buat-laporan', extra: task),
                   ),
                 );
               },
@@ -143,42 +145,42 @@ class _TugasPageState extends ConsumerState<TugasPage> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.r),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
                 color: AppTheme.primaryColor.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.assignment_turned_in_outlined,
                 color: AppTheme.primaryColor,
-                size: 56,
+                size: 56.sp,
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16.h),
+            Text(
               'Tidak Ada Tugas',
               style: TextStyle(
                 color: AppTheme.textPrimary,
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8.h),
+            Text(
               'Tidak ditemukan tugas penanganan yang cocok atau sedang aktif saat ini.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppTheme.textSecondary,
-                fontSize: 14,
-                height: 1.4,
+                fontSize: 14.sp,
+                height: 1.4.h,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: () {
                 ref.invalidate(listTugasProvider);
@@ -187,7 +189,7 @@ class _TugasPageState extends ConsumerState<TugasPage> {
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
               child: const Text('Segarkan'),
@@ -201,35 +203,35 @@ class _TugasPageState extends ConsumerState<TugasPage> {
   Widget _buildErrorState(String message) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.r),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline_rounded,
               color: Colors.redAccent,
-              size: 56,
+              size: 56.sp,
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16.h),
+            Text(
               'Gagal Memuat Tugas',
               style: TextStyle(
                 color: AppTheme.textPrimary,
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               message.replaceFirst('Exception: ', ''),
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textSecondary,
-                fontSize: 14,
-                height: 1.4,
+                fontSize: 14.sp,
+                height: 1.4.h,
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             ElevatedButton(
               onPressed: () {
                 ref.invalidate(listTugasProvider);
@@ -238,7 +240,7 @@ class _TugasPageState extends ConsumerState<TugasPage> {
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
               child: const Text('Coba Lagi'),
@@ -248,8 +250,6 @@ class _TugasPageState extends ConsumerState<TugasPage> {
       ),
     );
   }
-
-
 }
 
 class _TugasCard extends StatelessWidget {
@@ -264,34 +264,34 @@ class _TugasCard extends StatelessWidget {
     final taskColor = task.jenis == 'Verifikasi'
         ? const Color(0xFF6366F1)
         : task.jenis == 'Prospek'
-            ? const Color(0xFF10B981)
-            : const Color(0xFFEF4444);
+        ? const Color(0xFF10B981)
+        : const Color(0xFFEF4444);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
               color: AppTheme.textPrimary.withValues(alpha: 0.04),
               blurRadius: 12,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4.h),
             ),
           ],
           border: Border.all(
             color: taskColor.withValues(alpha: 0.15),
-            width: 1,
+            width: 1.w,
           ),
         ),
         child: Row(
           children: [
             // Icon
             Container(
-              width: 46,
-              height: 46,
+              width: 46.w,
+              height: 46.h,
               decoration: BoxDecoration(
                 color: taskColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
@@ -301,14 +301,14 @@ class _TugasCard extends StatelessWidget {
                   task.jenis == 'Verifikasi'
                       ? Icons.verified_user_outlined
                       : task.jenis == 'Prospek'
-                          ? Icons.trending_up_rounded
-                          : Icons.assignment_outlined,
+                      ? Icons.trending_up_rounded
+                      : Icons.assignment_outlined,
                   color: taskColor,
-                  size: 22,
+                  size: 22.sp,
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16.w),
             // Details
             Expanded(
               child: Column(
@@ -324,15 +324,18 @@ class _TugasCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: AppTheme.primaryColor,
-                            fontSize: 14,
+                            fontSize: 14.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       // Status Badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 3.h,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelesai
                               ? const Color(0xFF10B981).withValues(alpha: 0.1)
@@ -342,20 +345,22 @@ class _TugasCard extends StatelessWidget {
                         child: Text(
                           task.status ?? 'Proses',
                           style: TextStyle(
-                            color: isSelesai ? const Color(0xFF10B981) : Colors.amber.shade800,
-                            fontSize: 10,
+                            color: isSelesai
+                                ? const Color(0xFF10B981)
+                                : Colors.amber.shade800,
+                            fontSize: 10.sp,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6.h),
                   Text(
                     '${task.nomorRekening ?? "-"} | ${task.jenis?.toUpperCase() ?? "TUGAS"}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppTheme.textSecondary,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

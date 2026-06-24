@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:bangunarta_portal/core/auth/auth_provider.dart';
 import 'package:bangunarta_portal/core/auth/auth_repository.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:bangunarta_portal/core/network/api_endpoints.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -48,66 +50,66 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       backgroundColor: AppTheme.backgroundLight,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
 
               // Logo
               Center(
                 child: Container(
-                  width: 80,
-                  height: 80,
-                  padding: const EdgeInsets.all(16),
+                  width: 80.w,
+                  height: 80.h,
+                  padding: EdgeInsets.all(16.r),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceWhite,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryColor.withOpacity(0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
+                        color: AppTheme.primaryColor.withValues(alpha: .2),
+                        blurRadius: 16.r,
+                        offset: Offset(0, 8.h),
                       ),
                     ],
                   ),
                   child: Image.asset(
                     "assets/images/logo_polos.png",
-                    width: 40,
-                    height: 40,
+                    width: 40.w,
+                    height: 40.h,
                     fit: BoxFit.contain,
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
 
               // Judul Utama
-              const Text(
+              Text(
                 'Bangunarta One',
                 style: AppTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-              const Text(
+              SizedBox(height: 8.h),
+              Text(
                 'Silahkan login ke dalam aplikasi',
                 style: AppTheme.subtitleMedium,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
+              SizedBox(height: 48.h),
 
               // Form Username
-              const Text('Username', style: AppTheme.inputLabel),
-              const SizedBox(height: 8),
+              Text('Username', style: AppTheme.inputLabel),
+              SizedBox(height: 8.h),
               _buildTextField(
                 controller: _usernameController,
                 hint: 'Nomor Induk Karyawan',
                 icon: Icons.badge_outlined,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
 
               // Form Password
-              const Text('Password', style: AppTheme.inputLabel),
-              const SizedBox(height: 8),
+              Text('Password', style: AppTheme.inputLabel),
+              SizedBox(height: 8.h),
               _buildTextField(
                 controller: _passwordController,
                 hint: '........',
@@ -120,8 +122,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   });
                 },
               ),
-              const SizedBox(height: 16),
-
+              SizedBox(height: 16.h),
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      ApiEndpoints.baseUrl ==
+                              'https://codex.bprbangunarta.co.id'
+                          ? 'Server: Main'
+                          : 'Server: Backup',
+                      style: AppTheme.versionText,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
               // Remember Me Custom Checkbox
               Row(
                 children: [
@@ -178,7 +193,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Masuk', style: AppTheme.buttonText),
+                          : Text('Masuk', style: AppTheme.buttonText),
                     ),
                   ),
                   if (_isBiometricLoginVisible) ...[
@@ -235,7 +250,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('v1.0.0 BETA', style: AppTheme.footerLink),
+                  Text('v1.0.0 BETA', style: AppTheme.footerLink),
                   // const Padding(
                   //   padding: EdgeInsets.symmetric(horizontal: 16),
                   //   child: Text('•', style: AppTheme.footerLink),
@@ -446,11 +461,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _showMessage(String message, {bool isError = true}) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    final Color backgroundColor = isError ? const Color(0xFFFDF2F2) : const Color(0xFFF0FDF4);
-    final Color borderColor = isError ? const Color(0xFFFDE8E8) : const Color(0xFFDCFCE7);
-    final Color textColor = isError ? const Color(0xFF9B1C1C) : const Color(0xFF15803D);
-    final Color iconColor = isError ? const Color(0xFFE02424) : const Color(0xFF16A34A);
-    final IconData icon = isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded;
+    final Color backgroundColor = isError
+        ? const Color(0xFFFDF2F2)
+        : const Color(0xFFF0FDF4);
+    final Color borderColor = isError
+        ? const Color(0xFFFDE8E8)
+        : const Color(0xFFDCFCE7);
+    final Color textColor = isError
+        ? const Color(0xFF9B1C1C)
+        : const Color(0xFF15803D);
+    final Color iconColor = isError
+        ? const Color(0xFFE02424)
+        : const Color(0xFF16A34A);
+    final IconData icon = isError
+        ? Icons.error_outline_rounded
+        : Icons.check_circle_outline_rounded;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -467,7 +492,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             border: Border.all(color: borderColor, width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: (isError ? const Color(0xFF9B1C1C) : const Color(0xFF15803D)).withValues(alpha: 0.08),
+                color:
+                    (isError
+                            ? const Color(0xFF9B1C1C)
+                            : const Color(0xFF15803D))
+                        .withValues(alpha: 0.08),
                 blurRadius: 16,
                 spreadRadius: 0,
                 offset: const Offset(0, 8),
@@ -479,14 +508,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: isError ? const Color(0xFFFDE8E8) : const Color(0xFFDCFCE7),
+                  color: isError
+                      ? const Color(0xFFFDE8E8)
+                      : const Color(0xFFDCFCE7),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 20,
-                ),
+                child: Icon(icon, color: iconColor, size: 20),
               ),
               const SizedBox(width: 14),
               Expanded(

@@ -7,9 +7,6 @@ import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
 import 'package:bangunarta_portal/features/samba/services/thermal_printer_service.dart';
 import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
-import 'package:bangunarta_portal/models/samba/cetak_simpanan_model.dart';
-
-import 'package:image/image.dart' as img;
 
 /// Bottom sheet untuk memilih printer dan menjalankan cetak
 class PrinterSelectionSheet extends ConsumerStatefulWidget {
@@ -28,6 +25,10 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
   bool _isPrinting = false;
   String? _connectedMac;
 
+  /// Data cetak yang sudah berhasil diambil dari server.
+  /// Disimpan agar retry tidak perlu hit endpoint lagi (counter tidak bertambah).
+  CetakSimpananData? _cachedTxData;
+
   /// Tipe error untuk menentukan UI yang ditampilkan
   _ErrorType? _errorType;
   String? _errorMessage;
@@ -45,7 +46,7 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       _errorMessage = null;
     });
 
-    // 1. Minta izin Bluetooth → memunculkan popup sistem Android
+    // Izin bluetooth
     final permResult = await ThermalPrinterService.requestBluetoothPermission();
 
     if (permResult == BluetoothPermissionResult.permanentlyDenied) {
@@ -68,7 +69,7 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       return;
     }
 
-    // 2. Cek apakah Bluetooth aktif di HP
+    // Pengecekan bluetooth aktif
     final bluetoothOn = await ThermalPrinterService.isBluetoothEnabled();
     if (!bluetoothOn) {
       setState(() {
@@ -80,7 +81,7 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       return;
     }
 
-    // 3. Ambil daftar perangkat yang sudah dipasangkan
+    // Mengambil daftar perangkat yang ada
     final devices = await ThermalPrinterService.getPairedDevices();
 
     setState(() {
@@ -99,40 +100,50 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       _errorType = null;
     });
 
-    // Hit endpoint cetak terlebih dahulu untuk menambah counter cetak
-    // dan mendapatkan data terbaru dari server
-    CetakSimpananData txData;
-    try {
-      final cetakResult = await ref
-          .read(cetakTransactionProvider(widget.transactionId).future)
-          .timeout(const Duration(seconds: 10));
-      txData = cetakResult.data;
-    } catch (_) {
+    final connected = await ThermalPrinterService.connect(device.macAdress);
+    if (!mounted) return;
+    if (!connected) {
       setState(() {
         _isPrinting = false;
+        _errorType = _ErrorType.printFailed;
+        _errorMessage =
+            'Gagal terhubung ke ${device.name} setelah beberapa percobaan.\nPastikan printer menyala, dalam jangkauan Bluetooth, dan tidak terhubung ke perangkat lain.';
+      });
+      return;
+    }
+
+    setState(() => _connectedMac = device.macAdress);
+    CetakSimpananData txData;
+    try {
+      if (_cachedTxData != null) {
+        txData = _cachedTxData!;
+      } else {
+        final cetakResult = await ref
+            .read(cetakTransactionProvider(widget.transactionId).future)
+            .timeout(const Duration(seconds: 10));
+        txData = cetakResult.data;
+        _cachedTxData = txData;
+      }
+    } catch (_) {
+      await ThermalPrinterService.disconnect();
+      if (!mounted) return;
+      setState(() {
+        _isPrinting = false;
+        _connectedMac = null;
         _errorType = _ErrorType.printFailed;
         _errorMessage = 'Gagal mengambil data cetak dari server.';
       });
       return;
     }
 
-    final connected = await ThermalPrinterService.connect(device.macAdress);
-    if (!connected) {
-      setState(() {
-        _isPrinting = false;
-        _errorType = _ErrorType.printFailed;
-        _errorMessage =
-            'Gagal terhubung ke ${device.name}.\nPastikan printer menyala dan dalam jangkauan Bluetooth.';
-      });
-      return;
-    }
-
-    setState(() => _connectedMac = device.macAdress);
-
-    final printed = await ThermalPrinterService.printTransactionReceipt(txData);
+    final printed = await ThermalPrinterService.printTransactionReceipt(
+      txData,
+      macAddress: device.macAdress,
+    );
 
     await ThermalPrinterService.disconnect();
 
+    if (!mounted) return;
     setState(() {
       _isPrinting = false;
       _connectedMac = null;
@@ -141,13 +152,15 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
     if (!mounted) return;
 
     if (printed) {
+      // Bersihkan cache setelah cetak berhasil
+      _cachedTxData = null;
       Navigator.pop(context);
       _showSuccessSnackbar();
     } else {
       setState(() {
         _errorType = _ErrorType.printFailed;
         _errorMessage =
-            'Gagal mencetak. Pastikan printer siap dan kertas tersedia.';
+            'Gagal mencetak. Pastikan printer siap dan kertas tersedia.\nTekan \'Coba Lagi\' untuk mencetak ulang tanpa menambah counter cetak.';
       });
     }
   }
@@ -438,24 +451,66 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    color: Colors.redAccent,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(
-                        fontSize: 12,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
                         color: Colors.redAccent,
-                        height: 1.4,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.redAccent,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Badge "data aman" jika sudah ada cache
+                  if (_cachedTxData != null) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.cloud_done_outlined,
+                            size: 13,
+                            color: Colors.orange,
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            'Data tersimpan – cetak ulang tidak menambah counter',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

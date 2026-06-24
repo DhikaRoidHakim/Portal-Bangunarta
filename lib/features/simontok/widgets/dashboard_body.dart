@@ -1,47 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 // Dashboard Widget utama Simontok
 Widget buildDashboardWidget({
   required int currentIndex,
+  required String namaPengguna,
+  required String role,
   required Function(int) onTap,
 }) {
   return Stack(
     children: [
       // Primary Background Header
       Container(
-        height: 220,
+        height: 220.h,
         width: double.infinity,
         color: AppTheme.primaryColor,
       ),
       SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
           children: [
             // Top Custom App Bar
             Center(
               child: Text(
                 'SIMONTOK Mobile',
-                style: const TextStyle(color: AppTheme.textWhite).copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(
+                  color: AppTheme.textWhite,
+                ).copyWith(fontSize: 20.sp, fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(height: 30),
+            SizedBox(height: 30.h),
 
             // Main Profile Card
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24.r),
               decoration: BoxDecoration(
                 color: AppTheme.surfaceWhite,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(20.r),
                 boxShadow: [
                   BoxShadow(
                     color: AppTheme.textPrimary.withValues(alpha: .05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    blurRadius: 20.r,
+                    offset: Offset(0, 10.h),
                   ),
                 ],
               ),
@@ -52,21 +54,31 @@ Widget buildDashboardWidget({
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Selamat Datang',
+                            Text(
+                              'Selamat Datang.',
                               style: TextStyle(
                                 color: AppTheme.textPrimary,
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Super Admin',
+                            SizedBox(height: 4.h),
+                            // Text(
+                            //   role,
+                            //   style: TextStyle(
+                            //     color: AppTheme.textPrimary,
+                            //     fontSize: 14.sp,
+                            //     fontWeight: FontWeight.w500,
+                            //   ),
+                            // ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              namaPengguna,
                               style: TextStyle(
                                 color: AppTheme.secondaryColor,
-                                fontSize: 24,
+                                fontSize: 24.sp,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -74,66 +86,27 @@ Widget buildDashboardWidget({
                         ),
                       ),
                       Container(
-                        width: 60,
-                        height: 60,
+                        width: 60.w,
+                        height: 60.h,
                         decoration: BoxDecoration(
                           color: AppTheme.primaryColor.withValues(alpha: .1),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Icon(
                             Icons.person_outline,
                             color: AppTheme.primaryColor,
-                            size: 32,
+                            size: 32.sp,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  const Divider(color: AppTheme.inputBorder, thickness: 1),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildActionItem(
-                        icon: Icons.people_alt_outlined,
-                        title: 'Kelolaan',
-                        color: AppTheme.primaryColor,
-                        onTap: () {
-                          onTap(1);
-                        },
-                      ),
-                      _buildActionItem(
-                        icon: Icons.assignment_outlined,
-                        title: 'Tugas',
-                        color: Colors.pink,
-                        onTap: () {
-                          onTap(2);
-                        },
-                      ),
-                      _buildActionItem(
-                        icon: Icons.pie_chart_outline,
-                        title: 'Prospek',
-                        color: Colors.blue,
-                        onTap: () {
-                          onTap(3);
-                        },
-                      ),
-                      _buildActionItem(
-                        icon: Icons.check_circle_outline,
-                        title: 'Verifikasi',
-                        color: Colors.green,
-                        onTap: () {
-                          onTap(4);
-                        },
-                      ),
-                    ],
-                  ),
+                  SizedBox(height: 28.h),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
 
             // Grid Stats
             Row(
@@ -145,30 +118,29 @@ Widget buildDashboardWidget({
                     AppTheme.primaryColor,
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 Expanded(
                   child: _buildStatCard('Surat Tugas', '0', Colors.pink),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Row(
               children: [
                 Expanded(
                   child: _buildStatCard('Prospek Kredit', '0', Colors.blue),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 Expanded(
                   child: _buildStatCard('Verifikasi Kredit', '0', Colors.green),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
 
-            // Bottom Illustration Banner (Placeholder)
             Container(
               width: double.infinity,
-              height: 150,
+              height: 150.h,
               decoration: BoxDecoration(
                 color: AppTheme.surfaceWhite,
                 borderRadius: BorderRadius.circular(20),
@@ -201,8 +173,8 @@ Widget _buildActionItem({
     child: Column(
       children: [
         Container(
-          width: 55,
-          height: 55,
+          width: 55.w,
+          height: 55.h,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(16),
@@ -211,12 +183,12 @@ Widget _buildActionItem({
             child: Icon(icon, color: AppTheme.surfaceWhite, size: 28),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppTheme.textPrimary,
-            fontSize: 12,
+            fontSize: 12.sp,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -228,28 +200,28 @@ Widget _buildActionItem({
 // Status Card Widget internal
 Widget _buildStatCard(String title, String value, Color valueColor) {
   return Container(
-    padding: const EdgeInsets.all(20),
+    padding: EdgeInsets.all(20.r),
     decoration: BoxDecoration(
       color: AppTheme.surfaceWhite,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16.r),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppTheme.textSecondary,
-            fontSize: 14,
+            fontSize: 14.sp,
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         Text(
           value,
           style: TextStyle(
             color: valueColor,
-            fontSize: 32,
+            fontSize: 32.sp,
             fontWeight: FontWeight.bold,
           ),
         ),

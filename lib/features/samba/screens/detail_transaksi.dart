@@ -1,5 +1,6 @@
 import 'dart:math' show pi;
 
+import 'package:bangunarta_portal/core/utils/global_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,7 +55,7 @@ class DetailTransaksiScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: detailAsync.whenOrNull(
         data: (detail) =>
-            _buildBottomBar(context, detail.data.id, detail.data.cetak),
+            _buildBottomBar(context, ref, detail.data.id, detail.data.cetak),
       ),
     );
   }
@@ -72,12 +73,13 @@ class DetailTransaksiScreen extends ConsumerWidget {
         ? const Color(0xFFFEF3C7)
         : const Color(0xFFDCFCE7);
 
-    final formatter = NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    );
-    final nominalFormatted = formatter.format(tx.nominal);
+    // final formatter = NumberFormat.currency(
+    //   locale: 'id_ID',
+    //   symbol: 'Rp ',
+    //   decimalDigits: 0,
+    // );
+    // final nominalFormatted = formatter.format(tx.nominal);
+    final nominalFormatted = toRupiah(tx.nominal.toString());
 
     return SingleChildScrollView(
       child: Column(
@@ -172,7 +174,6 @@ class DetailTransaksiScreen extends ConsumerWidget {
                           ],
                         ],
                       ),
-
                       _buildSectionDivider(),
 
                       // Keterangan
@@ -468,7 +469,12 @@ class DetailTransaksiScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, int txId, int cetak) {
+  Widget _buildBottomBar(
+    BuildContext context,
+    WidgetRef ref,
+    int txId,
+    int cetak,
+  ) {
     final isBlocked = cetak >= 2;
 
     return Container(
@@ -539,7 +545,7 @@ class DetailTransaksiScreen extends ConsumerWidget {
                 child: InkWell(
                   onTap: isBlocked
                       ? () => _showBlockedSnackbar(context)
-                      : () => _showPrinterSheet(context, txId),
+                      : () => _showPrinterSheet(context, ref, txId),
                   borderRadius: BorderRadius.circular(14),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 15),
@@ -621,13 +627,22 @@ class DetailTransaksiScreen extends ConsumerWidget {
     );
   }
 
-  void _showPrinterSheet(BuildContext context, int txId) {
-    showModalBottomSheet(
+  Future<void> _showPrinterSheet(
+    BuildContext context,
+    WidgetRef ref,
+    int txId,
+  ) async {
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => PrinterSelectionSheet(transactionId: txId),
     );
+
+    // Refresh data detail transaksi setelah sheet ditutup
+    // agar counter cetak terbaru diambil dari server dan
+    // tombol cetak otomatis di-disable jika sudah mencapai batas.
+    ref.invalidate(detailSimpananTransactionProvider(transactionId));
   }
 }
 

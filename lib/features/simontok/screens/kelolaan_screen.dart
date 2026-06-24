@@ -5,6 +5,7 @@ import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/simontok/providers/simontok_provider.dart';
 import 'package:bangunarta_portal/models/simontok/list_pinjaman_model.dart';
 import 'detail_kredit_screen.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class KelolaanPage extends ConsumerStatefulWidget {
   final bool showBackButton;
@@ -53,7 +54,6 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
     });
   }
 
-  
   @override
   Widget build(BuildContext context) {
     final listPinjamanAsync = ref.watch(listPinjamanProvider);
@@ -67,27 +67,27 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
                 controller: _searchController,
                 autofocus: true,
                 onChanged: _onSearchChanged,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+                style: TextStyle(color: Colors.white, fontSize: 16.sp),
                 decoration: const InputDecoration(
                   hintText: 'Cari nama debitur...',
                   hintStyle: TextStyle(color: Colors.white70),
                   border: InputBorder.none,
                 ),
               )
-            : const Text(
+            : Text(
                 'KREDIT KELOLAAN',
                 style: TextStyle(
                   color: AppTheme.textWhite,
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
         leading: widget.showBackButton
             ? IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_ios_new,
                   color: Colors.white,
-                  size: 20,
+                  size: 20.sp,
                 ),
                 onPressed: () => Navigator.pop(context),
               )
@@ -97,7 +97,7 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
             icon: Icon(
               _isSearching ? Icons.close : Icons.search,
               color: Colors.white,
-              size: 24,
+              size: 24.sp,
             ),
             onPressed: _toggleSearch,
           ),
@@ -117,7 +117,7 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
             },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
               itemCount: dataList.length,
               itemBuilder: (context, index) {
                 final item = dataList[index];
@@ -139,12 +139,12 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
                       },
                     ),
                     if (index < dataList.length - 1)
-                      const Divider(
-                        height: 1,
-                        thickness: 0.8,
+                      Divider(
+                        height: 1.h,
+                        thickness: 0.8.h,
                         color: Color(0xFFE2E8F0),
-                        indent: 72,
-                        endIndent: 0,
+                        indent: 72.w,
+                        endIndent: 0.w,
                       ),
                   ],
                 );
@@ -163,42 +163,42 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.r),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
                 color: AppTheme.primaryColor.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.search_off_rounded,
                 color: AppTheme.primaryColor,
-                size: 56,
+                size: 56.sp,
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16.h),
+            Text(
               'Tidak Ada Data Kelolaan',
               style: TextStyle(
                 color: AppTheme.textPrimary,
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8.h),
+            Text(
               'Tidak ditemukan nasabah kredit kelolaan yang cocok atau terdaftar.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppTheme.textSecondary,
-                fontSize: 14,
-                height: 1.4,
+                fontSize: 14.sp,
+                height: 1.4.h,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: () {
                 ref.invalidate(listPinjamanProvider);
@@ -221,35 +221,35 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
   Widget _buildErrorState(String message) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.r),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline_rounded,
               color: Colors.redAccent,
-              size: 56,
+              size: 56.sp,
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16.h),
+            Text(
               'Gagal Memuat Data',
               style: TextStyle(
                 color: AppTheme.textPrimary,
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               message.replaceFirst('Exception: ', ''),
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textSecondary,
-                fontSize: 14,
-                height: 1.4,
+                fontSize: 14.sp,
+                height: 1.4.h,
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             ElevatedButton(
               onPressed: () {
                 ref.invalidate(listPinjamanProvider);
@@ -268,8 +268,6 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
       ),
     );
   }
-
-
 }
 
 class _NasabahTile extends StatelessWidget {
@@ -289,44 +287,38 @@ class _NasabahTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         child: Row(
           children: [
-            // Avatar lingkaran dengan icon person
             Container(
-              width: 44,
+              width: 44.w,
               height: 44,
               decoration: const BoxDecoration(
                 color: AppTheme.primaryColor,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.person,
-                color: AppTheme.textWhite,
-                size: 24,
-              ),
+              child: Icon(Icons.person, color: AppTheme.textWhite, size: 24.sp),
             ),
-            const SizedBox(width: 14),
-            // Nama & nomor rekening
+            SizedBox(width: 14.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     nama,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppTheme.primaryColor,
-                      fontSize: 13,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.3,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3.h),
                   Text(
                     noRekening,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppTheme.textSecondary,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w400,
                     ),
                   ),

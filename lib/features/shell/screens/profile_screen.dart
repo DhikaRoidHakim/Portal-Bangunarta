@@ -72,8 +72,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
-                    _buildChangePasswordButton(),
-                    SizedBox(height: 16.h),
+                    // _buildChangePasswordButton(),
+                    // SizedBox(height: 16.h),
                     _buildBiometricSettingTile(),
                     SizedBox(height: 16.h),
                     _buildLogoutButton(),
@@ -535,7 +535,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Tarik ke bawah atau tekan tombol di bawah untuk mencoba lagi.',
               textAlign: TextAlign.center,
               style: AppTheme.subtitleMedium,
@@ -604,11 +604,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     } on LocalAuthException catch (error) {
       if (!mounted) return;
       if (error.code == LocalAuthExceptionCode.noCredentialsSet) {
-        _showMessage('Gagal: Kunci layar (PIN/Pola/Password) belum diatur di perangkat. Silakan atur terlebih dahulu di Settings.');
+        _showMessage(
+          'Gagal: Kunci layar (PIN/Pola/Password) belum diatur di perangkat. Silakan atur terlebih dahulu di Settings.',
+        );
       } else if (error.code == LocalAuthExceptionCode.noBiometricsEnrolled) {
-        _showMessage('Gagal: Sidik jari belum terdaftar di perangkat. Silakan daftarkan sidik jari Anda di Settings.');
+        _showMessage(
+          'Gagal: Sidik jari belum terdaftar di perangkat. Silakan daftarkan sidik jari Anda di Settings.',
+        );
       } else {
-        _showMessage('Gagal mengubah pengaturan biometrik: ${error.description}');
+        _showMessage(
+          'Gagal mengubah pengaturan biometrik: ${error.description}',
+        );
       }
     } catch (error) {
       if (!mounted) return;
@@ -720,8 +726,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     return trimmedValue;
   }
-
-
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(

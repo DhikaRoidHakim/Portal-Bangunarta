@@ -68,36 +68,96 @@ class ThermalPrinterService {
     }
   }
 
-  /// Sambungkan ke printer berdasarkan MAC address
-  static Future<bool> connect(String macAddress) async {
+  static Future<bool> connect(
+    String macAddress, {
+    int maxAttempts = 3,
+    Duration initialDelay = const Duration(milliseconds: 600),
+    Duration timeout = const Duration(seconds: 8),
+  }) async {
     try {
-      return await PrintBluetoothThermal.connect(macPrinterAddress: macAddress);
-    } catch (_) {
-      return false;
+      final alreadyConnected = await PrintBluetoothThermal.connectionStatus;
+      if (alreadyConnected) {
+        await disconnect();
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    } catch (_) {}
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        final result = await PrintBluetoothThermal.connect(
+          macPrinterAddress: macAddress,
+        ).timeout(timeout);
+
+        if (result) return true;
+
+        if (attempt < maxAttempts) {
+          await Future.delayed(initialDelay * attempt);
+        }
+      } catch (_) {
+        if (attempt < maxAttempts) {
+          await Future.delayed(initialDelay * attempt);
+        }
+      }
     }
+
+    return false;
   }
 
-  /// Putuskan koneksi printer
   static Future<void> disconnect() async {
     try {
       await PrintBluetoothThermal.disconnect;
     } catch (_) {}
   }
 
-  /// Cetak bukti transaksi
   static Future<bool> printTransactionReceipt(
     CetakSimpananData tx, {
     PaperSize paperSize = PaperSize.mm58,
+    String? macAddress,
+    int maxRetries = 2,
   }) async {
     try {
-      final connected = await isConnected();
-      if (!connected) return false;
-
       final bytes = await _buildReceiptBytes(tx, paperSize: paperSize);
-      return await PrintBluetoothThermal.writeBytes(bytes);
+      return await _printWithRetry(
+        bytes: bytes,
+        macAddress: macAddress,
+        maxRetries: maxRetries,
+      );
     } catch (_) {
       return false;
     }
+  }
+
+  static Future<bool> _printWithRetry({
+    required List<int> bytes,
+    String? macAddress,
+    int maxRetries = 2,
+  }) async {
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        final connected = await isConnected();
+        if (!connected) {
+          if (macAddress == null || macAddress.isEmpty) return false;
+          final reconnected = await connect(macAddress);
+          if (!reconnected) {
+            if (attempt < maxRetries) {
+              await Future.delayed(const Duration(seconds: 2));
+            }
+            continue;
+          }
+        }
+
+        final success = await PrintBluetoothThermal.writeBytes(bytes);
+        if (success) return true;
+        if (attempt < maxRetries) {
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      } catch (_) {
+        if (attempt < maxRetries) {
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      }
+    }
+    return false;
   }
 
   static Future<List<int>> _buildReceiptBytes(

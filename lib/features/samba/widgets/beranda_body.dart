@@ -5,15 +5,18 @@ import 'package:intl/intl.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
 import 'package:bangunarta_portal/features/samba/widgets/samba_skeletons.dart';
+import 'package:bangunarta_portal/core/utils/global_util.dart';
 
-String _toRupiah(String value) {
-  final number = num.tryParse(value) ?? 0;
-  return NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  ).format(number);
-}
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+// String _toRupiah(String value) {
+//   final number = num.tryParse(value) ?? 0;
+//   return NumberFormat.currency(
+//     locale: 'id_ID',
+//     symbol: 'Rp ',
+//     decimalDigits: 0,
+//   ).format(number);
+// }
 
 Widget buildStatCard({
   required String title,
@@ -22,10 +25,10 @@ Widget buildStatCard({
   required Color iconBackgroundColor,
 }) {
   return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
     decoration: BoxDecoration(
       color: AppTheme.surfaceWhite,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16.r),
       boxShadow: [
         BoxShadow(
           color: AppTheme.textPrimary.withValues(alpha: 0.04),
@@ -37,11 +40,11 @@ Widget buildStatCard({
     child: Row(
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: 40.w,
+          height: 40.h,
           decoration: BoxDecoration(
             color: iconBackgroundColor,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14.r),
             boxShadow: [
               BoxShadow(
                 color: iconBackgroundColor.withValues(alpha: 0.3),
@@ -51,27 +54,27 @@ Widget buildStatCard({
             ],
           ),
           child: Center(
-            child: Icon(icon, color: AppTheme.surfaceWhite, size: 24),
+            child: Icon(icon, color: AppTheme.surfaceWhite, size: 24.sp),
           ),
         ),
-        const SizedBox(width: 16),
+        SizedBox(width: 16.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 13,
+                style: TextStyle(
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textSecondary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6.h),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textPrimary,
                 ),
@@ -90,7 +93,6 @@ Widget buildBerandaBody() {
       final simpananState = ref.watch(sambaSimpananNotifierProvider);
       final transaksiState = ref.watch(sambaTransaksiNotifierProvider);
 
-      // Show skeleton while data is loading
       final isLoading = simpananState.isLoading || transaksiState.isLoading;
       if (isLoading && !simpananState.hasValue && !transaksiState.hasValue) {
         return const BerandaSkeleton();
@@ -110,16 +112,16 @@ Widget buildBerandaBody() {
 
       final successTxCount = transaksiState.maybeWhen(
         data: (t) => t.summary.isNotEmpty
-            ? _toRupiah(t.summary.first.success)
-            : _toRupiah('0'),
-        orElse: () => _toRupiah('0'),
+            ? toRupiah(t.summary.first.success)
+            : toRupiah('0'),
+        orElse: () => toRupiah('0'),
       );
 
       final pendingTxCount = transaksiState.maybeWhen(
         data: (t) => t.summary.isNotEmpty
-            ? _toRupiah(t.summary.first.pending)
-            : _toRupiah('0'),
-        orElse: () => _toRupiah('0'),
+            ? toRupiah(t.summary.first.pending)
+            : toRupiah('0'),
+        orElse: () => toRupiah('0'),
       );
 
       final latestTx = transaksiState.maybeWhen(
@@ -128,7 +130,7 @@ Widget buildBerandaBody() {
       );
 
       return SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
+        padding: EdgeInsets.all(20.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -139,20 +141,20 @@ Widget buildBerandaBody() {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'DASHBOARD',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textSecondary,
                         letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
+                    SizedBox(height: 4.h),
+                    Text(
                       'Saving Mobile App',
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 22.sp,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.primaryColor,
                       ),
@@ -160,13 +162,13 @@ Widget buildBerandaBody() {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14.w,
+                    vertical: 10.h,
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.secondaryColor,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(10.r),
                     boxShadow: [
                       BoxShadow(
                         color: AppTheme.secondaryColor.withValues(alpha: 0.3),
@@ -177,17 +179,17 @@ Widget buildBerandaBody() {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.calendar_today_outlined,
                         color: AppTheme.surfaceWhite,
-                        size: 16,
+                        size: 16.sp,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       Text(
                         dateString,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppTheme.surfaceWhite,
-                          fontSize: 14,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -196,7 +198,7 @@ Widget buildBerandaBody() {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             Row(
               children: [
                 Expanded(
@@ -207,7 +209,7 @@ Widget buildBerandaBody() {
                     iconBackgroundColor: const Color(0xFF7F8C9D), // grey
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 Expanded(
                   child: buildStatCard(
                     title: 'Transaction',
@@ -218,7 +220,7 @@ Widget buildBerandaBody() {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Row(
               children: [
                 Expanded(
@@ -229,7 +231,7 @@ Widget buildBerandaBody() {
                     iconBackgroundColor: const Color(0xFF28A745), // green
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 Expanded(
                   child: buildStatCard(
                     title: 'Pending',
@@ -240,33 +242,33 @@ Widget buildBerandaBody() {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24.r),
               decoration: BoxDecoration(
                 color: AppTheme.surfaceWhite,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
                     color: AppTheme.textPrimary.withValues(alpha: 0.04),
                     blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    offset: Offset(0, 10.h),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Transaksi Terakhir',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   if (latestTx != null) ...[
                     Builder(
                       builder: (context) {
@@ -279,19 +281,19 @@ Widget buildBerandaBody() {
                               extra: latestTx.id,
                             );
                           },
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12.r),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            padding: EdgeInsets.symmetric(vertical: 4.h),
                             child: Row(
                               children: [
                                 Container(
-                                  width: 56,
-                                  height: 56,
+                                  width: 56.w,
+                                  height: 56.h,
                                   decoration: BoxDecoration(
                                     color: isPending
                                         ? const Color(0xFFFEF3C7)
                                         : const Color(0xFFDCFCE7),
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(16.r),
                                   ),
                                   child: Center(
                                     child: Icon(
@@ -299,11 +301,11 @@ Widget buildBerandaBody() {
                                       color: isPending
                                           ? const Color(0xFFD97706)
                                           : const Color(0xFF15803D),
-                                      size: 28,
+                                      size: 28.sp,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                SizedBox(width: 16.w),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -313,26 +315,26 @@ Widget buildBerandaBody() {
                                         latestTx.deskripsi,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 16,
+                                        style: TextStyle(
+                                          fontSize: 16.sp,
                                           fontWeight: FontWeight.w600,
                                           color: AppTheme.textPrimary,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      SizedBox(height: 4.h),
                                       Text(
                                         'sebesar Rp ${latestTx.nominal}',
-                                        style: const TextStyle(
-                                          fontSize: 14,
+                                        style: TextStyle(
+                                          fontSize: 14.sp,
                                           fontWeight: FontWeight.w700,
                                           color: AppTheme.textSecondary,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      SizedBox(height: 4.h),
                                       Text(
                                         latestTx.waktu,
-                                        style: const TextStyle(
-                                          fontSize: 12,
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
                                           color: AppTheme.textLightBlue,
                                         ),
                                       ),
@@ -353,40 +355,40 @@ Widget buildBerandaBody() {
                     Row(
                       children: [
                         Container(
-                          width: 56,
-                          height: 56,
+                          width: 56.w,
+                          height: 56.h,
                           decoration: BoxDecoration(
                             color: AppTheme.primaryColor.withValues(
                               alpha: 0.06,
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Icon(
                               Icons.receipt_long_outlined,
                               color: AppTheme.primaryColor,
-                              size: 28,
+                              size: 28.sp,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        SizedBox(width: 16.w),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               Text(
                                 'Mohon maaf',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16.sp,
                                   fontWeight: FontWeight.w600,
                                   color: AppTheme.textPrimary,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              SizedBox(height: 4.h),
                               Text(
                                 'Tidak ditemukan data yang cocok.',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 14.sp,
                                   fontWeight: FontWeight.w400,
                                   color: AppTheme.textSecondary,
                                 ),
@@ -397,7 +399,7 @@ Widget buildBerandaBody() {
                       ],
                     ),
                   ],
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                 ],
               ),
             ),

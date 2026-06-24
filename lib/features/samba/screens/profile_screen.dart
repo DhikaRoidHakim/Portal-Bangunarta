@@ -17,7 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Simulate brief data loading for smoother perceived performance
     Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -37,7 +36,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           automaticallyImplyLeading: false,
           title: Row(
             children: [
-              Image.asset('assets/images/logo_polos.png', width: 28, height: 28),
+              Image.asset(
+                'assets/images/logo_polos.png',
+                width: 28,
+                height: 28,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'BPR BANGUNARTA',
@@ -64,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppTheme.surfaceWhite,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: false, // Menghilangkan back button bawaan
+        automaticallyImplyLeading: false,
         title: Row(
           children: [
             Image.asset('assets/images/logo_polos.png', width: 28, height: 28),
