@@ -1,5 +1,6 @@
 import 'dart:math' show pi;
 
+import 'package:bangunarta_portal/core/services/remote_config_service.dart';
 import 'package:bangunarta_portal/core/utils/global_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -475,7 +476,7 @@ class DetailTransaksiScreen extends ConsumerWidget {
     int txId,
     int cetak,
   ) {
-    final isBlocked = cetak >= 2;
+    final isBlocked = cetak >= RemoteConfigService().countCetakResi;
 
     return Container(
       decoration: BoxDecoration(
@@ -506,7 +507,7 @@ class DetailTransaksiScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Resi telah dicetak 2x, tidak bisa mencetak lagi',
+                      'Sudah Mencapai Batas Cetak Resi',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.red.shade400,
@@ -638,10 +639,6 @@ class DetailTransaksiScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => PrinterSelectionSheet(transactionId: txId),
     );
-
-    // Refresh data detail transaksi setelah sheet ditutup
-    // agar counter cetak terbaru diambil dari server dan
-    // tombol cetak otomatis di-disable jika sudah mencapai batas.
     ref.invalidate(detailSimpananTransactionProvider(transactionId));
   }
 }

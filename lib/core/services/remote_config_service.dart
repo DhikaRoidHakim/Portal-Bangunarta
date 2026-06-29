@@ -10,31 +10,36 @@ class RemoteConfigService {
 
   /// Key yang digunakan di Firebase Remote Config
   static const String _keyBaseUrl = 'BASE_URL';
+  static const String _countCetakResi = 'COUNT_CETAK';
 
   Future<void> initialize() async {
     _remoteConfig = FirebaseRemoteConfig.instance;
 
-    await _remoteConfig.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(seconds: 10),
-      minimumFetchInterval: kDebugMode
-          ? const Duration(minutes: 1)
-          : const Duration(hours: 1),
-    ));
+    await _remoteConfig.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(seconds: 10),
+        minimumFetchInterval: kDebugMode
+            ? const Duration(minutes: 1)
+            : const Duration(hours: 1),
+      ),
+    );
 
     // Default value jika Remote Config tidak tersedia / belum di-fetch
     await _remoteConfig.setDefaults(const {
       _keyBaseUrl: '',
+      _countCetakResi: 10,
     });
 
     try {
       await _remoteConfig.fetchAndActivate();
       debugPrint('[RemoteConfig] Fetch & activate berhasil.');
     } catch (e) {
-      debugPrint('[RemoteConfig] Gagal fetch: $e. Menggunakan default / cached value.');
+      debugPrint(
+        '[RemoteConfig] Gagal fetch: $e. Menggunakan default / cached value.',
+      );
     }
   }
 
-  /// Ambil BASE_URL dari Remote Config.
-  /// Mengembalikan string kosong jika parameter belum diset di Firebase.
   String get baseUrl => _remoteConfig.getString(_keyBaseUrl);
+  int get countCetakResi => _remoteConfig.getInt(_countCetakResi);
 }

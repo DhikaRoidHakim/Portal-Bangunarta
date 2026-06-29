@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:bangunarta_portal/models/samba/cetak_simpanan_model.dart';
 import 'package:flutter/services.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
