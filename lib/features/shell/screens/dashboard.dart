@@ -59,6 +59,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       gradient: const [Color(0xFFE28C4A), Color(0xFFD6732B)],
       onTap: () => context.go('/simontok'),
     ),
+    _ServiceItem(
+      title: 'Sipebri',
+      subtitle: 'Sistem Permohonan Kredit',
+      iconPath: 'assets/icons/file-check.svg',
+      color: AppTheme.primaryColor,
+      gradient: const [AppTheme.primaryColor, Color(0xFF1E3A8A)],
+      onTap: () => context.go('/sipebri'),
+    ),
     // _ServiceItem(
     //   title: 'Helpdesk',
     //   subtitle: 'Pusat Bantuan',
