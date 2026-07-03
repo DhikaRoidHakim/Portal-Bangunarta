@@ -164,13 +164,28 @@ class _SipebriHomeScreenState extends ConsumerState<SipebriHomeScreen> {
           ),
 
           // Index 1: Survey Screen
-          const SipebriSurveyScreen(showBackButton: false),
+          SipebriSurveyScreen(
+            showBackButton: false,
+            onMenuTap: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+          ),
 
           // Index 2: Survey RSC Screen (FAB Page)
-          const SipebriSurveyRscScreen(showBackButton: false),
+          SipebriSurveyRscScreen(
+            showBackButton: false,
+            onMenuTap: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+          ),
 
           // Index 3: Tracking Screen
-          const SipebriTrackingScreen(showBackButton: false),
+          SipebriTrackingScreen(
+            showBackButton: false,
+            onMenuTap: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+          ),
 
           // Index 4: Settings Screen
           const SettingsPage(),

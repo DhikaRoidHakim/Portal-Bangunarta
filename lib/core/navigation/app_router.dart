@@ -24,6 +24,7 @@ import 'package:bangunarta_portal/features/simontok/screens/tambah_prospek_scree
 import 'package:bangunarta_portal/models/simontok/list_tugas_model.dart';
 import 'package:bangunarta_portal/models/simontok/list_prospek_model.dart';
 import 'package:bangunarta_portal/features/sipebri/screens/home_screen.dart';
+import 'package:bangunarta_portal/features/sipebri/screens/tracking_detail_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -181,6 +182,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/sipebri',
         builder: (context, state) => const SipebriHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'tracking-detail',
+            builder: (context, state) {
+              final name = state.extra as String? ?? 'User';
+              return SipebriTrackingDetailScreen(name: name);
+            },
+          ),
+        ],
       ),
     ],
   );
