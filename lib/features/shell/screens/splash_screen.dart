@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:bangunarta_portal/core/utils/global_util.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -20,7 +21,6 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  String _version = '';
   late AnimationController _entryController;
   late AnimationController _floatingController;
 
@@ -32,10 +32,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late Animation<Offset> _subtitleSlide;
   late Animation<double> _footerFade;
 
+  String _version = '';
+
+  Future<void> _loadVersion() async {
+    final version = await getVersion();
+    if (mounted) {
+      setState(() {
+        _version = version;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _initVersion();
+    _loadVersion();
+
 
     _entryController = AnimationController(
       vsync: this,
@@ -121,7 +133,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         final currentVer = config.androidCurrentVersion;
         if (config.forceUpdate == 1 && currentAppVersion != currentVer) {
           isUpdateRequired = true;
-          updateUrl = 'https://play.google.com/store/apps/details?id=com.bangunarta.one';
+          updateUrl =
+              'https://play.google.com/store/apps/details?id=com.bangunarta.one';
         }
       } else if (Platform.isIOS) {
         final currentVer = config.iosCurrentVersion;
@@ -231,7 +244,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     onPressed: () async {
                       final uri = Uri.parse(updateUrl);
                       if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -255,23 +271,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ),
       ),
     );
-  }
-
-  Future<void> _initVersion() async {
-    try {
-      final info = await PackageInfo.fromPlatform();
-      if (mounted) {
-        setState(() {
-          _version = 'v${info.version}';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _version = 'v1.0.0';
-        });
-      }
-    }
   }
 
   @override
@@ -554,9 +553,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                         const SizedBox(height: 24),
                         // Versi Aplikasi
-                        if (_version.isNotEmpty)
                           Text(
-                            '$_version BETA',
+                            _version,
                             style: AppTheme.versionText.copyWith(
                               color: AppTheme.primaryColor.withValues(
                                 alpha: 0.4,

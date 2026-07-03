@@ -146,7 +146,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Widget _buildChangePasswordButton() {
+  Widget buildChangePasswordButton() {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(

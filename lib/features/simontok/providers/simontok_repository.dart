@@ -184,7 +184,7 @@ class SimontokRepository {
         'keterangan_hasil': keteranganHasil,
         if (janjiBayar.isNotEmpty) 'janji_bayar': janjiBayar,
         'klasifikasi': klasifikasi,
-        if (multipartFile != null) 'foto_penanganan': multipartFile,
+        'foto_penanganan': ?multipartFile,
       });
 
       final response = await DioClient.instance.dio.post(
@@ -249,7 +249,7 @@ class SimontokRepository {
         'nomor_debitur': nomorDebitur,
         'nomor_pendamping': nomorPendamping,
         'klasifikasi': klasifikasi,
-        if (multipartFile != null) 'foto_penanganan': multipartFile,
+        'foto_penanganan': ?multipartFile,
       });
 
       // final requestUrl = '${DioClient.instance.dio.options.baseUrl}${ApiEndpoints.submitVerifikasi}/$taskId';

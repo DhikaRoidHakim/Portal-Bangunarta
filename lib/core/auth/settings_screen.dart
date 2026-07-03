@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bangunarta_portal/core/auth/auth_provider.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
+import 'package:bangunarta_portal/core/utils/global_util.dart';
+
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -10,6 +12,7 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final versionFuture = getVersion();
 
     if (authState.status == AuthStatus.loading ||
         authState.status == AuthStatus.unauthenticated ||
@@ -140,6 +143,7 @@ class SettingsPage extends ConsumerWidget {
                   iconColor: const Color(0xFF6366F1),
                   title: 'Tentang Aplikasi',
                   subtitle: 'Versi 1.0.0',
+                  showArrow: false,
                   onTap: () {},
                 ),
               ],
@@ -167,7 +171,6 @@ class SettingsPage extends ConsumerWidget {
               title: 'Keluar',
               subtitle: 'Keluar dari akun',
               titleColor: const Color(0xFFEF4444),
-              showArrow: false,
               onTap: () => _showLogoutDialog(context, ref),
             ),
           ),
@@ -245,9 +248,7 @@ class SettingsPage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
         content: Column(
           mainAxisSize: MainAxisSize.min,

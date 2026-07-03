@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:bangunarta_portal/core/auth/auth_provider.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/core/utils/dashboard_util.dart';
@@ -61,7 +59,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     ),
     _ServiceItem(
       title: 'Sipebri',
-      subtitle: 'Sistem Permohonan Kredit',
+      subtitle: 'Sistem Pemberian Kredit',
       iconPath: 'assets/icons/file-check.svg',
       color: AppTheme.primaryColor,
       gradient: const [AppTheme.primaryColor, Color(0xFF1E3A8A)],

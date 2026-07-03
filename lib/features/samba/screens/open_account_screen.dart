@@ -351,7 +351,7 @@ class _OpenAccountScreenState extends State<OpenAccountScreen> {
             color: AppTheme.surfaceWhite,
           ),
           child: DropdownButtonFormField<String>(
-            value: value,
+            initialValue: value,
             isExpanded: true,
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,

@@ -29,7 +29,7 @@ import 'package:go_router/go_router.dart';
 
 class _AuthChangeNotifier extends ChangeNotifier {
   _AuthChangeNotifier(Ref ref) {
-    ref.listen<AuthState>(authProvider, (_, __) {
+    ref.listen<AuthState>(authProvider, (_, _) {
       notifyListeners();
     });
   }

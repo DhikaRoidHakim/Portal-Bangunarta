@@ -162,7 +162,7 @@ Widget buildDashboardWidget({
 }
 
 // Action Item Widget internal
-Widget _buildActionItem({
+Widget buildActionItem({
   required IconData icon,
   required String title,
   required Color color,

@@ -91,44 +91,14 @@ class SipebriDashboardBody extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
         children: [
-          // 1. Permohonan Kredit Card
+          // Permohonan Kredit Card
           PermohonanKreditCard(onDetailTap: onPermohonanDetailTap),
 
           SizedBox(height: 20.h),
 
-          // 2. Realisasi Card
+          // Realisasi Card
           RealisasiCard(onViewAllTap: onRealisasiViewAllTap),
 
-          SizedBox(height: 36.h),
-
-          // 3. Footer
-          Center(
-            child: Column(
-              children: [
-                Text(
-                  'SIPEBRI V1.0',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textSecondary.withValues(alpha: 0.8),
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  'PT. BPR BANGUNARTA',
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textSecondary.withValues(alpha: 0.6),
-                    letterSpacing: 0.6,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Extra space for FAB and BottomBar
           SizedBox(height: 80.h),
         ],
       ),
