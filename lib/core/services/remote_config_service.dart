@@ -11,6 +11,7 @@ class RemoteConfigService {
   /// Key yang digunakan di Firebase Remote Config
   static const String _keyBaseUrl = 'BASE_URL';
   static const String _countCetakResi = 'COUNT_CETAK';
+  static const String _keySigmaBaseUrl = 'SIGMA_BASE_URL';
 
   Future<void> initialize() async {
     _remoteConfig = FirebaseRemoteConfig.instance;
@@ -28,6 +29,7 @@ class RemoteConfigService {
     await _remoteConfig.setDefaults(const {
       _keyBaseUrl: '',
       _countCetakResi: 10,
+      _keySigmaBaseUrl: '',
     });
 
     try {
@@ -41,5 +43,6 @@ class RemoteConfigService {
   }
 
   String get baseUrl => _remoteConfig.getString(_keyBaseUrl);
+  String get sigmaBaseUrl => _remoteConfig.getString(_keySigmaBaseUrl);
   int get countCetakResi => _remoteConfig.getInt(_countCetakResi);
 }

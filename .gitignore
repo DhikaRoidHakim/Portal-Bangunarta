@@ -46,3 +46,7 @@ app.*.map.json
 
 # ENV
 .env
+
+# DOKUMENTASI
+*.docx
+Dokumentasi_Penggunaan.md

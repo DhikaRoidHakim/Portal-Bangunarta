@@ -1,5 +1,6 @@
 import 'package:bangunarta_portal/models/samba/cetak_simpanan_model.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:image/image.dart' as img;
 import 'package:permission_handler/permission_handler.dart';
@@ -11,6 +12,10 @@ import 'package:intl/intl.dart';
 enum BluetoothPermissionResult { granted, denied, permanentlyDenied }
 
 class ThermalPrinterService {
+  // Guard untuk mencegah beberapa connect() berjalan bersamaan
+  // (race condition saat user tap tombol print berkali-kali)
+  static bool _isConnecting = false;
+
   static Future<BluetoothPermissionResult> requestBluetoothPermission() async {
     final statuses = await [
       Permission.bluetoothConnect,
@@ -67,39 +72,54 @@ class ThermalPrinterService {
     }
   }
 
+  /// Connect ke printer.
+  ///
+  /// PENTING: koneksi di package ini dipegang oleh Kotlin coroutine yang
+  /// persistent dan TIDAK auto-disconnect meski printer sudah jauh/mati.
+  /// Karena itu kita SELALU membersihkan socket lama sebelum connect baru,
+  /// tanpa bergantung pada `connectionStatus` (yang bisa saja mismatch
+  /// dengan state socket native sebenarnya).
   static Future<bool> connect(
     String macAddress, {
     int maxAttempts = 3,
     Duration initialDelay = const Duration(milliseconds: 600),
     Duration timeout = const Duration(seconds: 8),
   }) async {
-    try {
-      final alreadyConnected = await PrintBluetoothThermal.connectionStatus;
-      if (alreadyConnected) {
-        await disconnect();
-        await Future.delayed(const Duration(milliseconds: 500));
-      }
-    } catch (_) {}
-
-    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        final result = await PrintBluetoothThermal.connect(
-          macPrinterAddress: macAddress,
-        ).timeout(timeout);
-
-        if (result) return true;
-
-        if (attempt < maxAttempts) {
-          await Future.delayed(initialDelay * attempt);
-        }
-      } catch (_) {
-        if (attempt < maxAttempts) {
-          await Future.delayed(initialDelay * attempt);
-        }
-      }
+    if (_isConnecting) {
+      // Sudah ada proses connect yang berjalan, jangan rebutan socket
+      return false;
     }
+    _isConnecting = true;
 
-    return false;
+    try {
+      // Selalu bersihkan koneksi/socket lama dulu, apa pun status yang
+      // dilaporkan connectionStatus. disconnect() aman dipanggil walau
+      // sebenarnya tidak ada koneksi aktif.
+      await disconnect();
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          final result = await PrintBluetoothThermal.connect(
+            macPrinterAddress: macAddress,
+          ).timeout(timeout);
+
+          if (result) return true;
+
+          if (attempt < maxAttempts) {
+            await Future.delayed(initialDelay * attempt);
+          }
+        } catch (_) {
+          if (attempt < maxAttempts) {
+            await Future.delayed(initialDelay * attempt);
+          }
+        }
+      }
+
+      return false;
+    } finally {
+      _isConnecting = false;
+    }
   }
 
   static Future<void> disconnect() async {
@@ -113,15 +133,27 @@ class ThermalPrinterService {
     PaperSize paperSize = PaperSize.mm58,
     String? macAddress,
     int maxRetries = 2,
+    bool disconnectAfterPrint = true,
   }) async {
     try {
       final bytes = await _buildReceiptBytes(tx, paperSize: paperSize);
-      return await _printWithRetry(
+      final success = await _printWithRetry(
         bytes: bytes,
         macAddress: macAddress,
         maxRetries: maxRetries,
       );
+
+      // Lepas socket segera setelah selesai print, supaya tidak ada
+      // koneksi yang "nyangkut" sampai sesi print berikutnya.
+      if (disconnectAfterPrint) {
+        await disconnect();
+      }
+
+      return success;
     } catch (_) {
+      if (disconnectAfterPrint) {
+        await disconnect();
+      }
       return false;
     }
   }
@@ -185,7 +217,6 @@ class ThermalPrinterService {
       final Uint8List logoRawBytes = logoData.buffer.asUint8List();
       img.Image? logoImage = img.decodeImage(logoRawBytes);
       if (logoImage != null) {
-        // Jika PNG punya alpha (transparan), composite di atas background putih
         if (logoImage.numChannels == 4) {
           final bg = img.Image(
             width: logoImage.width,
@@ -195,7 +226,6 @@ class ThermalPrinterService {
           img.fill(bg, color: img.ColorRgb8(255, 255, 255));
           logoImage = img.compositeImage(bg, logoImage);
         }
-        // Resize dan convert ke grayscale (wajib untuk ESC/POS)
         final resized = img.copyResize(logoImage, width: 150);
         final grayscale = img.grayscale(resized);
         bytes.addAll(generator.imageRaster(grayscale, align: PosAlign.center));
@@ -315,6 +345,7 @@ class ThermalPrinterService {
     bytes.addAll(generator.hr(ch: '-'));
 
     // ── Header Tabel ─────────────────────────────────────
+    bytes.addAll(generator.reset());
     bytes.addAll(
       generator.row([
         PosColumn(
@@ -349,6 +380,7 @@ class ThermalPrinterService {
       ]),
     );
 
+    bytes.addAll(generator.reset());
     bytes.addAll(
       generator.row([
         PosColumn(
@@ -365,6 +397,7 @@ class ThermalPrinterService {
     );
 
     // ── Biaya Admin ──────────────────────────────────────
+    bytes.addAll(generator.reset());
     bytes.addAll(
       generator.row([
         PosColumn(
@@ -381,10 +414,9 @@ class ThermalPrinterService {
     );
 
     bytes.addAll(generator.hr(ch: '-'));
+
     // ── Saldo Akhir ──────────────────────────────────────
-
     bytes.addAll(generator.reset());
-
     bytes.addAll(
       generator.row([
         PosColumn(
@@ -403,6 +435,7 @@ class ThermalPrinterService {
     bytes.addAll(generator.hr(ch: '-'));
 
     // ── Footer ───────────────────────────────────────────
+    bytes.addAll(generator.reset());
     bytes.addAll(
       generator.text(
         'Apabila terjadi ketidaksesuaian, harap segera menghubungi kami, untuk penyelesaian.',
@@ -410,8 +443,8 @@ class ThermalPrinterService {
         linesAfter: 0,
       ),
     );
-    bytes.addAll(generator.reset());
 
+    bytes.addAll(generator.reset());
     bytes.addAll(
       generator.text(
         'Terima kasih atas perhatian Anda.',
@@ -422,5 +455,38 @@ class ThermalPrinterService {
     bytes.addAll(generator.feed(3));
 
     return bytes;
+  }
+}
+
+/// Observer untuk memastikan koneksi printer dilepas saat app
+/// masuk background atau ditutup, supaya socket tidak "nyangkut"
+/// dan mengganggu sesi print berikutnya.
+///
+/// Cara pakai — daftarkan di initState halaman yang membuka koneksi printer:
+///
+/// ```dart
+/// late final PrinterLifecycleObserver _printerObserver;
+///
+/// @override
+/// void initState() {
+///   super.initState();
+///   _printerObserver = PrinterLifecycleObserver();
+///   WidgetsBinding.instance.addObserver(_printerObserver);
+/// }
+///
+/// @override
+/// void dispose() {
+///   WidgetsBinding.instance.removeObserver(_printerObserver);
+///   ThermalPrinterService.disconnect();
+///   super.dispose();
+/// }
+/// ```
+class PrinterLifecycleObserver extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      ThermalPrinterService.disconnect();
+    }
   }
 }

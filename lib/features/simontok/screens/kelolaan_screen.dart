@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
@@ -57,6 +58,8 @@ class _KelolaanPageState extends ConsumerState<KelolaanPage> {
   @override
   Widget build(BuildContext context) {
     final listPinjamanAsync = ref.watch(listPinjamanProvider);
+    final exportState = ref.watch(exportKelolaanServiceProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
       appBar: AppBar(

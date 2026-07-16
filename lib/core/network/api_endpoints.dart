@@ -2,30 +2,33 @@ import 'package:bangunarta_portal/core/services/remote_config_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiEndpoints {
-  static const bool isProduction = true;
+  static const bool isProduction = false;
 
   /// URL dari .env sebagai fallback
   static String get _devBaseUrl => dotenv.env['DEV_BASE_URL'] ?? '';
   static String get _prodBaseUrl => dotenv.env['PROD_BASE_URL'] ?? '';
 
-  // static String get baseUrl {
-  //   final remoteUrl = RemoteConfigService().baseUrl;
-  //   if (isProduction) {
-  //     if (remoteUrl.isNotEmpty) {
-  //       return remoteUrl;
-  //     }
-  //     return isProduction ? _prodBaseUrl : _devBaseUrl;
-  //   } else {
-  //     return _devBaseUrl;
-  //   }
-  // }
-
+  /// Get base url
   static String get baseUrl {
     final remoteUrl = RemoteConfigService().baseUrl;
     if (isProduction) {
       return remoteUrl.isNotEmpty ? remoteUrl : _prodBaseUrl;
     }
     return _devBaseUrl;
+  }
+
+  /// URL Sigma dari .env sebagai fallback
+  static String get _sigmaDevBaseUrl => dotenv.env['SIGMA_DEV_BASE_URL'] ?? '';
+  static String get _sigmaProdBaseUrl =>
+      dotenv.env['SIGMA_PROD_BASE_URL'] ?? '';
+
+  /// Get base url
+  static String get sigmaBaseUrl {
+    final remoteUrl = RemoteConfigService().sigmaBaseUrl;
+    if (isProduction) {
+      return remoteUrl.isNotEmpty ? remoteUrl : _sigmaProdBaseUrl;
+    }
+    return _sigmaDevBaseUrl;
   }
 
   // Endpoints System
@@ -52,4 +55,7 @@ class ApiEndpoints {
   static const String listSimpanan = '/api/samba/simpanan';
   static const String transaksiSimpanan = '/api/samba/transaksi';
   static const String cetakTransaksi = '/api/samba/cetak';
+
+  // Endpoints Sigma
+  static const String listAset = 'api/sigma/assets';
 }

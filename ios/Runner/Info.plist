@@ -72,5 +72,11 @@
 	<string>Aplikasi memerlukan akses galeri untuk memilih foto penanganan laporan.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Aplikasi memerlukan akses mikrofon untuk merekam suara jika diperlukan.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Aplikasi memerlukan akses folder untuk menyimpan PDF.</string>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 </dict>
 </plist>

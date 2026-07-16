@@ -1185,7 +1185,7 @@ class _OpenAccountScreenState extends State<OpenAccountScreen> {
       // Read KTP image bytes
       final ktpBytes = await _ktpImage!.readAsBytes();
 
-      // TODO: Kirim ke backend via API service
+      // TODO: Kirim ke backend via API service open account
 
       debugPrint('KTP size: ${ktpBytes.length} bytes');
       debugPrint('Signature size: ${signatureBytes.length} bytes');

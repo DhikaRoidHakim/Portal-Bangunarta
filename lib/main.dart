@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:overlay_support/overlay_support.dart';
 
+import 'package:media_store_plus/media_store_plus.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -22,6 +24,8 @@ Future<void> main() async {
   // Inisialisasi Remote Config (fetch BASE_URL dari Firebase)
   await RemoteConfigService().initialize();
 
+  // Inisialisasi MediaStore untuk export PDF
+  await MediaStore.ensureInitialized();
 
   runApp(const ProviderScope(child: MyApp()));
 }

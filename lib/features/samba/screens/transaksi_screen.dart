@@ -53,6 +53,7 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
   @override
   Widget build(BuildContext context) {
     final listTransaksiAsync = ref.watch(sambaTransaksiNotifierProvider);
+    final exportState = ref.watch(exportTransaksiNotifierProvider);
 
     return RefreshIndicator(
       color: AppTheme.primaryColor,
@@ -100,9 +101,39 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
                     border: Border.all(color: AppTheme.inputBorder),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.file_download_outlined),
+                    icon: exportState.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.primaryColor,
+                            ),
+                          )
+                        : const Icon(Icons.file_download_outlined),
                     color: AppTheme.textSecondary,
-                    onPressed: () {},
+                    onPressed: exportState.isLoading
+                        ? null
+                        : () async {
+                            final success = await ref
+                                .read(exportTransaksiNotifierProvider.notifier)
+                                .exportToPdf(context);
+                            if (context.mounted) {
+                              final latestState = ref.read(exportTransaksiNotifierProvider);
+                              final errorMessage = latestState.hasError
+                                  ? latestState.error.toString()
+                                  : 'Gagal mengekspor PDF';
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    success
+                                        ? 'Berhasil mengekspor PDF ke folder Download'
+                                        : errorMessage,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
                     constraints: const BoxConstraints(
                       minWidth: 40,
                       minHeight: 40,
@@ -169,7 +200,9 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
                             color: AppTheme.textSecondary,
                             onPressed: () {
                               ref
-                                  .read(sambaTransaksiSearchQueryProvider.notifier)
+                                  .read(
+                                    sambaTransaksiSearchQueryProvider.notifier,
+                                  )
                                   .updateQuery(_searchController.text);
                             },
                             padding: EdgeInsets.zero,
@@ -264,7 +297,8 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
                               return _buildTransactionItem(
                                 context,
                                 item,
-                                isLast: index == items.length - 1 && !state.hasMore,
+                                isLast:
+                                    index == items.length - 1 && !state.hasMore,
                               );
                             },
                           ),
@@ -357,7 +391,9 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
               child: Center(
                 child: Icon(
                   Icons.receipt_long_outlined,
-                  color: isPending ? const Color(0xFFD97706) : const Color(0xFF15803D),
+                  color: isPending
+                      ? const Color(0xFFD97706)
+                      : const Color(0xFF15803D),
                   size: 24,
                 ),
               ),
@@ -400,7 +436,10 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: statusBg,
                           borderRadius: BorderRadius.circular(6),

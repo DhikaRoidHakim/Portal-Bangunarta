@@ -20,6 +20,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   int _currentIndex = 0;
   late final TextEditingController _searchController;
   String _searchQuery = '';
+  String _selectedCategory = 'Semua';
+
+  final List<Map<String, dynamic>> _categories = [
+    {'name': 'Semua', 'icon': Icons.grid_view_rounded},
+    {'name': 'Pendanaan', 'icon': Icons.account_balance_wallet_rounded},
+    {'name': 'Kredit', 'icon': Icons.payments_rounded},
+    {'name': 'SDM & UMUM', 'icon': Icons.people_alt_rounded},
+  ];
 
   @override
   void initState() {
@@ -48,6 +56,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       color: const Color(0xFF4FA8D2),
       gradient: const [Color(0xFF4FA8D2), Color(0xFF3388CA)],
       onTap: () => context.go('/samba'),
+      category: 'Pendanaan',
     ),
     _ServiceItem(
       title: 'Simontok',
@@ -56,6 +65,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       color: const Color(0xFFE28C4A),
       gradient: const [Color(0xFFE28C4A), Color(0xFFD6732B)],
       onTap: () => context.go('/simontok'),
+      category: 'Kredit',
     ),
     _ServiceItem(
       title: 'Sipebri',
@@ -64,6 +74,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       color: AppTheme.primaryColor,
       gradient: const [AppTheme.primaryColor, Color(0xFF1E3A8A)],
       onTap: () => context.go('/sipebri'),
+      category: 'Kredit',
+      disabled: true,
+    ),
+    _ServiceItem(
+      title: 'Sigma',
+      subtitle: 'Sistem Informasi Management Assets',
+      iconPath: 'assets/icons/device-desktop-analytics.svg',
+      color: const Color(0xFF28A745),
+      gradient: const [Color(0xFF28A745), Color(0xFF28A745)],
+      onTap: () => context.go('/sipebri'),
+      category: 'SDM & UMUM',
+      disabled: true,
     ),
     // _ServiceItem(
     //   title: 'Helpdesk',
@@ -93,8 +115,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
     final filteredServices = _services.where((s) {
       final q = _searchQuery.toLowerCase();
-      return s.title.toLowerCase().contains(q) ||
+      final matchesQuery =
+          s.title.toLowerCase().contains(q) ||
           s.subtitle.toLowerCase().contains(q);
+
+      if (_searchQuery.isNotEmpty) {
+        return matchesQuery;
+      } else {
+        if (_selectedCategory == 'Semua') {
+          return true;
+        } else {
+          return s.category == _selectedCategory;
+        }
+      }
     }).toList();
 
     return Scaffold(
@@ -146,6 +179,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ],
               ),
             ),
+            if (_searchQuery.isEmpty) ...[
+              SizedBox(height: 14.h),
+              _buildCategoryPills(),
+            ],
             SizedBox(height: 16.h),
 
             // ─── Service Cards ───
@@ -334,19 +371,234 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   // ═══════════════════════════════════════════════════════
-  //  List Layanan
+  //  Category Pills & List Layanan
   // ═══════════════════════════════════════════════════════
 
+  Widget _buildCategoryPills() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Row(
+        children: _categories.map((cat) {
+          final name = cat['name'] as String;
+          final icon = cat['icon'] as IconData;
+          final isSelected = _selectedCategory == name;
+
+          // Count items in this category
+          int count = 0;
+          if (name == 'Semua') {
+            count = _services.length;
+          } else {
+            count = _services.where((s) => s.category == name).length;
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(right: 12.w),
+            child: Material(
+              color: isSelected ? Colors.transparent : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              elevation: isSelected ? 4 : 0,
+              shadowColor: isSelected
+                  ? AppTheme.primaryColor.withValues(alpha: 0.3)
+                  : Colors.transparent,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(
+                    color: isSelected
+                        ? Colors.transparent
+                        : const Color(0xFFE2E8F0),
+                    width: 1,
+                  ),
+                  gradient: isSelected
+                      ? const LinearGradient(
+                          colors: [Color(0xFF092966), Color(0xFF1976D2)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                ),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedCategory = name;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(16.r),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 18.sp,
+                          color: isSelected
+                              ? Colors.white
+                              : AppTheme.textSecondary,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            color: isSelected
+                                ? Colors.white
+                                : AppTheme.textPrimary,
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Text(
+                            '$count',
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w700,
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildServicesList(List<_ServiceItem> items) {
+    // If searching, just render as flat list of search results
+    if (_searchQuery.isNotEmpty) {
+      return Column(
+        children: List.generate(items.length, (i) {
+          final s = items[i];
+          final isLast = i == items.length - 1;
+          return Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
+            child: _buildServiceCard(s),
+          );
+        }),
+      );
+    }
+
+    // If a specific category is selected, render its items as flat list
+    if (_selectedCategory != 'Semua') {
+      return Column(
+        children: List.generate(items.length, (i) {
+          final s = items[i];
+          final isLast = i == items.length - 1;
+          return Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
+            child: _buildServiceCard(s),
+          );
+        }),
+      );
+    }
+
+    // If 'Semua' is selected, group by category
+    final grouped = <String, List<_ServiceItem>>{};
+    for (final item in items) {
+      grouped.putIfAbsent(item.category, () => []).add(item);
+    }
+
+    // Order of categories to display
+    final categoryOrder = ['Pendanaan', 'Kredit', 'SDM & UMUM'];
+
     return Column(
-      children: List.generate(items.length, (i) {
-        final s = items[i];
-        final isLast = i == items.length - 1;
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: categoryOrder.map((category) {
+        final categoryItems = grouped[category] ?? [];
+        if (categoryItems.isEmpty) return const SizedBox.shrink();
+
+        // Get matching colors/accent for each category header
+        Color categoryAccentColor;
+        switch (category) {
+          case 'Pendanaan':
+            categoryAccentColor = const Color(0xFF3388CA);
+            break;
+          case 'Kredit':
+            categoryAccentColor = const Color(0xFFE28C4A);
+            break;
+          case 'SDM & UMUM':
+            categoryAccentColor = const Color(0xFF28A745);
+            break;
+          default:
+            categoryAccentColor = AppTheme.primaryColor;
+        }
+
         return Padding(
-          padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
-          child: _buildServiceCard(s),
+          padding: EdgeInsets.only(bottom: 24.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Category Section Header
+              Row(
+                children: [
+                  Container(
+                    width: 4.w,
+                    height: 16.h,
+                    decoration: BoxDecoration(
+                      color: categoryAccentColor,
+                      borderRadius: BorderRadius.circular(2.r),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Text(
+                    category,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '(${categoryItems.length})',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              // List of cards for this category
+              ...List.generate(categoryItems.length, (i) {
+                final s = categoryItems[i];
+                final isLast = i == categoryItems.length - 1;
+                return Padding(
+                  padding: EdgeInsets.only(bottom: isLast ? 0 : 12.h),
+                  child: _buildServiceCard(s),
+                );
+              }),
+            ],
+          ),
         );
-      }),
+      }).toList(),
     );
   }
 
@@ -559,6 +811,7 @@ class _ServiceItem {
   final List<Color> gradient;
   final VoidCallback onTap;
   final bool disabled;
+  final String category;
 
   _ServiceItem({
     required this.title,
@@ -568,5 +821,6 @@ class _ServiceItem {
     required this.gradient,
     required this.onTap,
     this.disabled = false,
+    required this.category,
   });
 }

@@ -53,6 +53,7 @@ class _RekeningScreenState extends ConsumerState<RekeningScreen> {
   @override
   Widget build(BuildContext context) {
     final listSimpananAsync = ref.watch(sambaSimpananNotifierProvider);
+    final exportState = ref.watch(exportKelolaanNotifierProvider);
 
     return RefreshIndicator(
       color: AppTheme.primaryColor,
@@ -100,9 +101,41 @@ class _RekeningScreenState extends ConsumerState<RekeningScreen> {
                     border: Border.all(color: AppTheme.inputBorder),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.file_download_outlined),
+                    icon: exportState.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.primaryColor,
+                            ),
+                          )
+                        : const Icon(Icons.file_download_outlined),
                     color: AppTheme.textSecondary,
-                    onPressed: () {},
+                    onPressed: exportState.isLoading
+                        ? null
+                        : () async {
+                            final success = await ref
+                                .read(exportKelolaanNotifierProvider.notifier)
+                                .exportToPdf(context);
+                            if (context.mounted) {
+                              final latestState = ref.read(
+                                exportKelolaanNotifierProvider,
+                              );
+                              final errorMessage = latestState.hasError
+                                  ? latestState.error.toString()
+                                  : 'Gagal Mengekspor file PDF';
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    success
+                                        ? "Berhasil Mengekspor File PDF Kedalam folder download"
+                                        : errorMessage,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
                     constraints: const BoxConstraints(
                       minWidth: 40,
                       minHeight: 40,
@@ -231,9 +264,7 @@ class _RekeningScreenState extends ConsumerState<RekeningScreen> {
                               const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: () {
-                                  ref.invalidate(
-                                    sambaSimpananNotifierProvider,
-                                  );
+                                  ref.invalidate(sambaSimpananNotifierProvider);
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppTheme.primaryColor,
@@ -265,7 +296,8 @@ class _RekeningScreenState extends ConsumerState<RekeningScreen> {
                                 context,
                                 item.namaLengkap,
                                 item.nomorRekening,
-                                isLast: index == items.length - 1 && !state.hasMore,
+                                isLast:
+                                    index == items.length - 1 && !state.hasMore,
                               );
                             },
                           ),
