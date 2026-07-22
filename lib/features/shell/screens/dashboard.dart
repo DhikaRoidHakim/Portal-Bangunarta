@@ -87,6 +87,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       category: 'SDM & UMUM',
       disabled: true,
     ),
+    _ServiceItem(
+      title: 'Prensi',
+      subtitle: 'Kehadiran Karyawan',
+      iconPath: 'assets/icons/fingerprint.svg',
+      color: const Color(0xFF430FA5),
+      gradient: const [Color(0xFF430FA5), Color(0xFF430FA5)],
+      onTap: () => context.go('/prensi'),
+      category: 'SDM & UMUM',
+      disabled: true,
+    ),
     // _ServiceItem(
     //   title: 'Helpdesk',
     //   subtitle: 'Pusat Bantuan',
