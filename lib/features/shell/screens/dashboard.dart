@@ -2,6 +2,7 @@ import 'package:bangunarta_portal/core/auth/auth_provider.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/core/utils/dashboard_util.dart';
 import 'package:bangunarta_portal/features/shell/widgets/dashboard_widgets.dart';
+import 'package:bangunarta_portal/core/services/remote_config_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,73 +49,62 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   // ── Service data ──
-  List<_ServiceItem> get _services => [
-    _ServiceItem(
-      title: 'Samba',
-      subtitle: 'Saving Mobile Bangunarta',
-      iconPath: 'assets/icons/cash-banknote-plus.svg',
-      color: const Color(0xFF4FA8D2),
-      gradient: const [Color(0xFF4FA8D2), Color(0xFF3388CA)],
-      onTap: () => context.go('/samba'),
-      category: 'Pendanaan',
-    ),
-    _ServiceItem(
-      title: 'Simontok',
-      subtitle: 'Sistem Monitoring Kredit',
-      iconPath: 'assets/icons/device-desktop-analytics.svg',
-      color: const Color(0xFFE28C4A),
-      gradient: const [Color(0xFFE28C4A), Color(0xFFD6732B)],
-      onTap: () => context.go('/simontok'),
-      category: 'Kredit',
-    ),
-    _ServiceItem(
-      title: 'Sipebri',
-      subtitle: 'Sistem Pemberian Kredit',
-      iconPath: 'assets/icons/file-check.svg',
-      color: AppTheme.primaryColor,
-      gradient: const [AppTheme.primaryColor, Color(0xFF1E3A8A)],
-      onTap: () => context.go('/sipebri'),
-      category: 'Kredit',
-      disabled: true,
-    ),
-    _ServiceItem(
-      title: 'Sigma',
-      subtitle: 'Sistem Informasi Management Assets',
-      iconPath: 'assets/icons/device-desktop-analytics.svg',
-      color: const Color(0xFF28A745),
-      gradient: const [Color(0xFF28A745), Color(0xFF28A745)],
-      onTap: () => context.go('/sipebri'),
-      category: 'SDM & UMUM',
-      disabled: true,
-    ),
-    _ServiceItem(
-      title: 'Prensi',
-      subtitle: 'Kehadiran Karyawan',
-      iconPath: 'assets/icons/fingerprint.svg',
-      color: const Color(0xFF430FA5),
-      gradient: const [Color(0xFF430FA5), Color(0xFF430FA5)],
-      onTap: () => context.go('/prensi'),
-      category: 'SDM & UMUM',
-      disabled: true,
-    ),
-    // _ServiceItem(
-    //   title: 'Helpdesk',
-    //   subtitle: 'Pusat Bantuan',
-    //   iconPath: 'assets/icons/messages.svg',
-    //   color: const Color(0xFF4CAF50),
-    //   gradient: const [Color(0xFF4EE293), Color(0xFF30B16B)],
-    //   onTap: () => context.go('/helpdesk'),
-    // ),
-    // _ServiceItem(
-    //   title: 'Presensi',
-    //   subtitle: 'Kehadiran Karyawan',
-    //   iconPath: 'assets/icons/fingerprint.svg',
-    //   color: const Color(0xFF9C27B0),
-    //   gradient: const [Color(0xFFA648E8), Color(0xFF7521B1)],
-    //   onTap: () {},
-    //   disabled: true,
-    // ),
-  ];
+  List<_ServiceItem> get _services {
+    final rc = RemoteConfigService();
+    return [
+      _ServiceItem(
+        title: 'Samba',
+        subtitle: 'Saving Mobile Bangunarta',
+        iconPath: 'assets/icons/cash-banknote-plus.svg',
+        color: const Color(0xFF4FA8D2),
+        gradient: const [Color(0xFF4FA8D2), Color(0xFF3388CA)],
+        onTap: () => context.go('/samba'),
+        category: 'Pendanaan',
+        disabled: rc.isServiceDisabled('samba'),
+      ),
+      _ServiceItem(
+        title: 'Simontok',
+        subtitle: 'Sistem Monitoring Kredit',
+        iconPath: 'assets/icons/device-desktop-analytics.svg',
+        color: const Color(0xFFE28C4A),
+        gradient: const [Color(0xFFE28C4A), Color(0xFFD6732B)],
+        onTap: () => context.go('/simontok'),
+        category: 'Kredit',
+        disabled: rc.isServiceDisabled('simontok'),
+      ),
+      _ServiceItem(
+        title: 'Sipebri',
+        subtitle: 'Sistem Pemberian Kredit',
+        iconPath: 'assets/icons/file-check.svg',
+        color: AppTheme.primaryColor,
+        gradient: const [AppTheme.primaryColor, Color(0xFF1E3A8A)],
+        onTap: () => context.go('/sipebri'),
+        category: 'Kredit',
+        disabled: rc.isServiceDisabled('sipebri', defaultIfMissing: true),
+      ),
+      _ServiceItem(
+        title: 'Sigma',
+        subtitle: 'Sistem Informasi Management Assets',
+        iconPath: 'assets/icons/device-desktop-analytics.svg',
+        color: const Color(0xFF28A745),
+        gradient: const [Color(0xFF28A745), Color(0xFF1E7E34)],
+        onTap: () => context.go('/sigma'),
+        category: 'SDM & UMUM',
+        disabled: rc.isServiceDisabled('sigma'),
+      ),
+      _ServiceItem(
+        title: 'Prensi',
+        subtitle: 'Kehadiran Karyawan',
+        iconPath: 'assets/icons/fingerprint.svg',
+        color: const Color(0xFF430FA5),
+        gradient: const [Color(0xFF430FA5), Color(0xFF430FA5)],
+        onTap: () => context.go('/prensi'),
+        category: 'SDM & UMUM',
+        disabled: rc.isServiceDisabled('prensi', defaultIfMissing: true) &&
+            rc.isServiceDisabled('presensi', defaultIfMissing: true),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,5 @@
 import 'package:bangunarta_portal/features/samba/screens/open_account_screen.dart';
+import 'package:bangunarta_portal/features/sigma/screens/asset_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:bangunarta_portal/core/auth/auth_provider.dart';
 import 'package:bangunarta_portal/core/navigation/navigation_service.dart';
@@ -25,6 +26,10 @@ import 'package:bangunarta_portal/models/simontok/list_tugas_model.dart';
 import 'package:bangunarta_portal/models/simontok/list_prospek_model.dart';
 import 'package:bangunarta_portal/features/sipebri/screens/home_screen.dart';
 import 'package:bangunarta_portal/features/sipebri/screens/tracking_detail_screen.dart';
+import 'package:bangunarta_portal/features/sigma/screens/home_screen.dart';
+import 'package:bangunarta_portal/features/sigma/screens/qr_scanner_screen.dart';
+import 'package:bangunarta_portal/models/sigma/detail_asset_model.dart';
+import 'package:bangunarta_portal/models/sigma/list_assets_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -189,6 +194,32 @@ final routerProvider = Provider<GoRouter>((ref) {
               final name = state.extra as String? ?? 'User';
               return SipebriTrackingDetailScreen(name: name);
             },
+          ),
+        ],
+      ),
+
+      // Sigma Route
+      GoRoute(
+        path: '/sigma',
+        builder: (context, state) => const SigmaHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'asset-detail',
+            builder: (context, state) {
+              final extra = state.extra;
+              if (extra is DetailModel) {
+                return AssetDetailScreen(asset: extra);
+              } else if (extra is AssetsModel) {
+                return AssetDetailScreen(assetId: extra.id);
+              } else if (extra is String) {
+                return AssetDetailScreen(assetId: extra);
+              }
+              return const AssetDetailScreen();
+            },
+          ),
+          GoRoute(
+            path: 'scan-qr',
+            builder: (context, state) => const QrScannerScreen(),
           ),
         ],
       ),
