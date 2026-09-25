@@ -6,12 +6,9 @@ import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:bangunarta_portal/core/theme/theme.dart';
 import 'package:bangunarta_portal/features/samba/providers/samba_provider.dart';
 import 'package:bangunarta_portal/features/samba/services/thermal_printer_service.dart';
-import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
 
-// ─── Enum dipindah ke level file (non-private) ────────────────────────────────
 enum PrinterErrorType { denied, permanentlyDenied, bluetoothOff, printFailed }
 
-/// Bottom sheet untuk memilih printer dan menjalankan cetak
 class PrinterSelectionSheet extends ConsumerStatefulWidget {
   final int transactionId;
 
@@ -27,12 +24,8 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
   bool _isLoading = true;
   bool _isPrinting = false;
   String? _connectedMac;
-
-  /// Data cetak yang sudah berhasil diambil dari server.
-  /// Disimpan agar retry tidak perlu hit endpoint lagi (counter tidak bertambah).
+  String? _printingStatus;
   CetakSimpananData? _cachedTxData;
-
-  /// Tipe error untuk menentukan UI yang ditampilkan
   PrinterErrorType? _errorType;
   String? _errorMessage;
 
@@ -47,11 +40,9 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       _isLoading = true;
       _errorType = null;
       _errorMessage = null;
-      // FIX #5: Reset cache saat initialize ulang agar tidak ada data stale
       _cachedTxData = null;
     });
 
-    // Izin bluetooth
     final permResult = await ThermalPrinterService.requestBluetoothPermission();
 
     if (permResult == BluetoothPermissionResult.permanentlyDenied) {
@@ -103,25 +94,41 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       _isPrinting = true;
       _errorMessage = null;
       _errorType = null;
+      _printingStatus = 'Menyiapkan data & menghubungkan...';
     });
+    final txDataFuture = _getReceiptData();
+    final connectFuture = ThermalPrinterService.connect(device.macAdress);
 
-    // FIX #4: Tambah timeout pada operasi connect agar tidak stuck selamanya
+    CetakSimpananData? txData;
     bool connected = false;
     try {
-      connected = await ThermalPrinterService.connect(
-        device.macAdress,
-      ).timeout(const Duration(seconds: 15), onTimeout: () => false);
+      final results = await Future.wait<dynamic>([txDataFuture, connectFuture]);
+      txData = results[0] as CetakSimpananData;
+      connected = results[1] as bool;
     } catch (e, stack) {
-      // FIX #3: Error tidak lagi ditelan — dicatat untuk debugging
-      debugPrint('[PrinterSheet] connect() error: $e\n$stack');
-      connected = false;
+      debugPrint('[PrinterSheet] prepare print error: $e\n$stack');
     }
 
     if (!mounted) return;
 
+    if (txData == null) {
+      await ThermalPrinterService.disconnect();
+      if (!mounted) return;
+
+      setState(() {
+        _isPrinting = false;
+        _connectedMac = null;
+        _printingStatus = null;
+        _errorType = PrinterErrorType.printFailed;
+        _errorMessage = 'Gagal mengambil data cetak dari server.';
+      });
+      return;
+    }
+
     if (!connected) {
       setState(() {
         _isPrinting = false;
+        _printingStatus = null;
         _errorType = PrinterErrorType.printFailed;
         _errorMessage =
             'Gagal terhubung ke ${device.name} setelah beberapa percobaan.\nPastikan printer menyala, dalam jangkauan Bluetooth, dan tidak terhubung ke perangkat lain.';
@@ -129,64 +136,30 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       return;
     }
 
-    setState(() => _connectedMac = device.macAdress);
+    setState(() {
+      _connectedMac = device.macAdress;
+      _printingStatus = 'Mengirim resi ke printer...';
+    });
 
-    // Ambil data cetak — gunakan cache jika tersedia
-    CetakSimpananData txData;
-    try {
-      if (_cachedTxData != null) {
-        txData = _cachedTxData!;
-      } else {
-        final cetakResult = await ref
-            .read(cetakTransactionProvider(widget.transactionId).future)
-            .timeout(const Duration(seconds: 10));
-        txData = cetakResult.data;
-        _cachedTxData = txData;
-      }
-    } catch (e, stack) {
-      // FIX #3: Log error fetch data
-      debugPrint('[PrinterSheet] fetch data error: $e\n$stack');
-
-      await ThermalPrinterService.disconnect();
-      if (!mounted) return;
-
-      setState(() {
-        _isPrinting = false;
-        _connectedMac = null;
-        _errorType = PrinterErrorType.printFailed;
-        _errorMessage = 'Gagal mengambil data cetak dari server.';
-      });
-      return;
-    }
-
-    // FIX #2: Bungkus printTransactionReceipt dengan try-catch + finally
-    // agar disconnect() SELALU dipanggil, bahkan jika print throw exception.
     bool printed = false;
     try {
-      // FIX #4: Tambah timeout pada operasi print
-      printed = await ThermalPrinterService.printTransactionReceipt(
-        txData,
-        macAddress: device.macAdress,
-      ).timeout(const Duration(seconds: 30), onTimeout: () => false);
+      printed = await ThermalPrinterService.printTransactionReceipt(txData);
     } catch (e, stack) {
-      // FIX #3: Log error print
       debugPrint('[PrinterSheet] print error: $e\n$stack');
       printed = false;
     } finally {
-      // FIX #2: disconnect() dipanggil di finally — dijamin selalu berjalan
       await ThermalPrinterService.disconnect();
     }
 
     if (!mounted) return;
 
-    // FIX #1: Hapus double !mounted check yang redundan — cukup satu di atas
     setState(() {
       _isPrinting = false;
       _connectedMac = null;
+      _printingStatus = null;
     });
 
     if (printed) {
-      // Bersihkan cache setelah cetak berhasil
       _cachedTxData = null;
       if (!mounted) return;
       Navigator.pop(context);
@@ -198,6 +171,18 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
             'Gagal mencetak. Pastikan printer siap dan kertas tersedia.\nTekan \'Coba Lagi\' untuk mencetak ulang tanpa menambah counter cetak.';
       });
     }
+  }
+
+  Future<CetakSimpananData> _getReceiptData() async {
+    final cachedData = _cachedTxData;
+    if (cachedData != null) return cachedData;
+
+    final cetakResult = await ref
+        .read(cetakTransactionProvider(widget.transactionId).future)
+        .timeout(const Duration(seconds: 10));
+    final txData = cetakResult.data;
+    _cachedTxData = txData;
+    return txData;
   }
 
   void _showSuccessSnackbar() {
@@ -324,7 +309,6 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
   }
 
   Widget _buildContent() {
-    // ── Loading ───────────────────────────────────────────
     if (_isLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 40),
@@ -343,7 +327,6 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       );
     }
 
-    // ── Ditolak Permanen → arahkan ke Settings ────────────
     if (_errorType == PrinterErrorType.permanentlyDenied) {
       return _buildErrorState(
         icon: Icons.bluetooth_disabled_rounded,
@@ -359,7 +342,6 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       );
     }
 
-    // ── Ditolak → minta lagi ──────────────────────────────
     if (_errorType == PrinterErrorType.denied) {
       return _buildErrorState(
         icon: Icons.bluetooth_disabled_rounded,
@@ -373,7 +355,6 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       );
     }
 
-    // ── Bluetooth mati ────────────────────────────────────
     if (_errorType == PrinterErrorType.bluetoothOff) {
       return _buildErrorState(
         icon: Icons.bluetooth_disabled_rounded,
@@ -387,7 +368,6 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       );
     }
 
-    // ── Tidak ada printer dipasangkan ─────────────────────
     if (_devices.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(24),
@@ -442,7 +422,6 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
       );
     }
 
-    // ── Daftar printer ────────────────────────────────────
     return Column(
       children: [
         ConstrainedBox(
@@ -453,7 +432,6 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
             shrinkWrap: true,
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: _devices.length,
-            // FIX #7: Ganti (_, _) menjadi (context, index) — kompatibel semua versi Dart
             separatorBuilder: (context, index) => const Divider(
               height: 1,
               thickness: 0.8,
@@ -470,13 +448,13 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
                 device: device,
                 isPrinting: isThisPrinting,
                 isDisabled: _isPrinting,
+                statusLabel: _printingStatus,
                 onTap: () => _connectAndPrint(device),
               );
             },
           ),
         ),
 
-        // Error inline (gagal cetak)
         if (_errorType == PrinterErrorType.printFailed && _errorMessage != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
@@ -511,7 +489,7 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
                       ),
                     ],
                   ),
-                  // Badge "data aman" jika sudah ada cache
+
                   if (_cachedTxData != null) ...[
                     const SizedBox(height: 8),
                     Container(
@@ -658,12 +636,14 @@ class _PrinterTile extends StatelessWidget {
   final BluetoothInfo device;
   final bool isPrinting;
   final bool isDisabled;
+  final String? statusLabel;
   final VoidCallback onTap;
 
   const _PrinterTile({
     required this.device,
     required this.isPrinting,
     required this.isDisabled,
+    required this.statusLabel,
     required this.onTap,
   });
 
@@ -751,8 +731,8 @@ class _PrinterTile extends StatelessWidget {
                     color: AppTheme.primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
-                    'Mencetak...',
+                  child: Text(
+                    statusLabel ?? 'Memproses...',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

@@ -8,12 +8,9 @@ import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
 import 'package:intl/intl.dart';
 
-/// Hasil dari permintaan permission Bluetooth
 enum BluetoothPermissionResult { granted, denied, permanentlyDenied }
 
 class ThermalPrinterService {
-  // Guard untuk mencegah beberapa connect() berjalan bersamaan
-  // (race condition saat user tap tombol print berkali-kali)
   static bool _isConnecting = false;
 
   static Future<BluetoothPermissionResult> requestBluetoothPermission() async {
@@ -36,7 +33,6 @@ class ThermalPrinterService {
     return BluetoothPermissionResult.denied;
   }
 
-  /// Cek apakah Bluetooth aktif
   static Future<bool> isBluetoothEnabled() async {
     try {
       return await PrintBluetoothThermal.bluetoothEnabled;
@@ -45,7 +41,6 @@ class ThermalPrinterService {
     }
   }
 
-  /// Cek apakah permission Bluetooth sudah diberikan (tanpa request)
   static Future<bool> isPermissionGranted() async {
     try {
       return await PrintBluetoothThermal.isPermissionBluetoothGranted;
@@ -54,7 +49,6 @@ class ThermalPrinterService {
     }
   }
 
-  /// Ambil daftar Bluetooth yang sudah dipasangkan
   static Future<List<BluetoothInfo>> getPairedDevices() async {
     try {
       return await PrintBluetoothThermal.pairedBluetooths;
@@ -63,7 +57,6 @@ class ThermalPrinterService {
     }
   }
 
-  /// Cek status koneksi printer
   static Future<bool> isConnected() async {
     try {
       return await PrintBluetoothThermal.connectionStatus;
@@ -72,31 +65,20 @@ class ThermalPrinterService {
     }
   }
 
-  /// Connect ke printer.
-  ///
-  /// PENTING: koneksi di package ini dipegang oleh Kotlin coroutine yang
-  /// persistent dan TIDAK auto-disconnect meski printer sudah jauh/mati.
-  /// Karena itu kita SELALU membersihkan socket lama sebelum connect baru,
-  /// tanpa bergantung pada `connectionStatus` (yang bisa saja mismatch
-  /// dengan state socket native sebenarnya).
   static Future<bool> connect(
     String macAddress, {
-    int maxAttempts = 3,
-    Duration initialDelay = const Duration(milliseconds: 600),
-    Duration timeout = const Duration(seconds: 8),
+    int maxAttempts = 2,
+    Duration initialDelay = const Duration(milliseconds: 500),
+    Duration timeout = const Duration(seconds: 6),
   }) async {
     if (_isConnecting) {
-      // Sudah ada proses connect yang berjalan, jangan rebutan socket
       return false;
     }
     _isConnecting = true;
 
     try {
-      // Selalu bersihkan koneksi/socket lama dulu, apa pun status yang
-      // dilaporkan connectionStatus. disconnect() aman dipanggil walau
-      // sebenarnya tidak ada koneksi aktif.
       await disconnect();
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 250));
 
       for (int attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
@@ -124,67 +106,48 @@ class ThermalPrinterService {
 
   static Future<void> disconnect() async {
     try {
-      await PrintBluetoothThermal.disconnect;
+      await PrintBluetoothThermal.disconnect.timeout(
+        const Duration(seconds: 2),
+      );
     } catch (_) {}
   }
 
+  /// Mengirim resi ke printer yang sudah tersambung.
+  ///
+  /// Koneksi dikelola oleh pemanggil supaya kegagalan write tidak memicu
+  /// proses connect ulang yang panjang. Pemanggil juga bertanggung jawab
+  /// memanggil [disconnect] setelah proses selesai.
   static Future<bool> printTransactionReceipt(
     CetakSimpananData tx, {
     PaperSize paperSize = PaperSize.mm58,
-    String? macAddress,
-    int maxRetries = 2,
-    bool disconnectAfterPrint = true,
+    int maxRetries = 1,
   }) async {
     try {
       final bytes = await _buildReceiptBytes(tx, paperSize: paperSize);
-      final success = await _printWithRetry(
-        bytes: bytes,
-        macAddress: macAddress,
-        maxRetries: maxRetries,
-      );
-
-      // Lepas socket segera setelah selesai print, supaya tidak ada
-      // koneksi yang "nyangkut" sampai sesi print berikutnya.
-      if (disconnectAfterPrint) {
-        await disconnect();
-      }
-
-      return success;
+      return _writeWithRetry(bytes: bytes, maxRetries: maxRetries);
     } catch (_) {
-      if (disconnectAfterPrint) {
-        await disconnect();
-      }
       return false;
     }
   }
 
-  static Future<bool> _printWithRetry({
+  static Future<bool> _writeWithRetry({
     required List<int> bytes,
-    String? macAddress,
-    int maxRetries = 2,
+    int maxRetries = 1,
   }) async {
+    if (!await isConnected()) return false;
+
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        final connected = await isConnected();
-        if (!connected) {
-          if (macAddress == null || macAddress.isEmpty) return false;
-          final reconnected = await connect(macAddress);
-          if (!reconnected) {
-            if (attempt < maxRetries) {
-              await Future.delayed(const Duration(seconds: 2));
-            }
-            continue;
-          }
-        }
-
-        final success = await PrintBluetoothThermal.writeBytes(bytes);
+        final success = await PrintBluetoothThermal.writeBytes(
+          bytes,
+        ).timeout(const Duration(seconds: 10), onTimeout: () => false);
         if (success) return true;
         if (attempt < maxRetries) {
-          await Future.delayed(const Duration(seconds: 2));
+          await Future.delayed(const Duration(milliseconds: 500));
         }
       } catch (_) {
         if (attempt < maxRetries) {
-          await Future.delayed(const Duration(seconds: 2));
+          await Future.delayed(const Duration(milliseconds: 500));
         }
       }
     }
@@ -285,7 +248,6 @@ class ThermalPrinterService {
 
     bytes.addAll(generator.hr(ch: '-'));
 
-    // ── Tanggal & No. Referensi ──────────────────────────
     bytes.addAll(generator.reset());
 
     bytes.addAll(
