@@ -50,3 +50,5 @@ app.*.map.json
 # DOKUMENTASI
 *.docx
 Dokumentasi_Penggunaan.md
+docs/
+CLAUDE.md
