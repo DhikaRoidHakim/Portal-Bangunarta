@@ -32,6 +32,7 @@ class _PrinterSelectionSheetState extends ConsumerState<PrinterSelectionSheet> {
   @override
   void initState() {
     super.initState();
+    ThermalPrinterService.warmUp();
     _initialize();
   }
 

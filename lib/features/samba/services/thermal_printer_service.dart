@@ -1,8 +1,6 @@
 import 'package:bangunarta_portal/models/samba/cetak_simpanan_model.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
-import 'package:image/image.dart' as img;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:bangunarta_portal/models/samba/transaction_response_model.dart';
@@ -112,55 +110,164 @@ class ThermalPrinterService {
     } catch (_) {}
   }
 
+  // ── Pengiriman data ─────────────────────────────────────
+  //
+  // Plugin print_bluetooth_thermal (Android) memproses `writeBytes` di main
+  // thread, menulis ke socket secara blocking, dan SELALU menambahkan "\n" di
+  // depan setiap pemanggilan. Karena itu satu payload besar membuat UI macet /
+  // timeout, sedangkan chunk yang dipotong sembarang menyisipkan "\n" di tengah
+  // perintah ESC/POS (posisi `ESC $`, align `ESC a`, data raster `GS v 0`)
+  // sehingga teks bergeser dari tengah atau gambar rusak.
+  //
+  // Solusinya: struk disusun sebagai segmen utuh (satu perintah/baris lengkap),
+  // dipaketkan menjadi chunk kecil hanya di batas segmen, lalu "\n" sisipan
+  // plugin dinetralkan dengan line spacing 0 di batas chunk.
+
+  /// Ukuran maksimum satu kali kirim. Kecil supaya main thread Android tidak
+  /// lama terblokir dan buffer printer murah tidak overflow.
+  static const int _maxChunkBytes = 512;
+
+  /// Jeda antar chunk agar printer sempat memproses buffer-nya.
+  static const Duration _chunkInterval = Duration(milliseconds: 60);
+
+  /// Batas waktu satu chunk. Jika terlampaui, cetak dianggap gagal.
+  static const Duration _chunkTimeout = Duration(seconds: 5);
+
+  /// Jeda setelah chunk terakhir supaya buffer Bluetooth OS benar-benar
+  /// terkirim sebelum pemanggil memutus koneksi (penyebab struk terpotong).
+  static const Duration _drainDelay = Duration(milliseconds: 800);
+
+  /// ESC 3 0 — line spacing 0, supaya "\n" sisipan plugin tidak menambah baris.
+  static const List<int> _lineSpacingZero = [0x1B, 0x33, 0x00];
+
+  /// ESC 2 — kembalikan line spacing default.
+  static const List<int> _lineSpacingDefault = [0x1B, 0x32];
+
+  /// Transport pengiriman; dapat diganti di test (plugin memakai jalur
+  /// berbeda saat test berjalan di host Windows).
+  @visibleForTesting
+  static Future<bool> Function(List<int> bytes) bytesWriter =
+      PrintBluetoothThermal.writeBytes;
+
+  @visibleForTesting
+  static Future<bool> Function() connectionChecker = isConnected;
+
+  static bool _isPrinting = false;
+  static Future<CapabilityProfile>? _profileFuture;
+
+  /// Memuat profil printer lebih awal (di-cache) supaya saat cetak
+  /// tidak perlu menunggu parsing aset.
+  static Future<void> warmUp() async {
+    try {
+      await _getProfile();
+    } catch (e) {
+      // Akan dimuat ulang saat cetak.
+      debugPrint('[ThermalPrinter] warm up gagal: $e');
+    }
+  }
+
   /// Mengirim resi ke printer yang sudah tersambung.
   ///
   /// Koneksi dikelola oleh pemanggil supaya kegagalan write tidak memicu
   /// proses connect ulang yang panjang. Pemanggil juga bertanggung jawab
   /// memanggil [disconnect] setelah proses selesai.
+  ///
+  /// Tidak ada retry otomatis: chunk yang timeout bisa saja tetap tercetak,
+  /// sehingga mengirim ulang berisiko menghasilkan struk ganda.
   static Future<bool> printTransactionReceipt(
     CetakSimpananData tx, {
     PaperSize paperSize = PaperSize.mm58,
-    int maxRetries = 1,
   }) async {
+    if (_isPrinting) return false;
+    _isPrinting = true;
+
     try {
-      final bytes = await _buildReceiptBytes(tx, paperSize: paperSize);
-      return _writeWithRetry(bytes: bytes, maxRetries: maxRetries);
-    } catch (_) {
+      final segments = await _buildReceiptSegments(tx, paperSize: paperSize);
+      return await _writeChunks(packChunks(segments));
+    } catch (e, stack) {
+      debugPrint('[ThermalPrinter] print error: $e\n$stack');
       return false;
+    } finally {
+      _isPrinting = false;
     }
   }
 
-  static Future<bool> _writeWithRetry({
-    required List<int> bytes,
-    int maxRetries = 1,
-  }) async {
-    if (!await isConnected()) return false;
+  /// Menggabungkan segmen menjadi chunk ≤ [_maxChunkBytes] tanpa pernah
+  /// memotong satu segmen.
+  @visibleForTesting
+  static List<List<int>> packChunks(
+    List<List<int>> segments, {
+    int maxChunkBytes = _maxChunkBytes,
+  }) {
+    final chunks = <List<int>>[];
+    var current = <int>[];
 
-    for (int attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        final success = await PrintBluetoothThermal.writeBytes(
-          bytes,
-        ).timeout(const Duration(seconds: 10), onTimeout: () => false);
-        if (success) return true;
-        if (attempt < maxRetries) {
-          await Future.delayed(const Duration(milliseconds: 500));
-        }
-      } catch (_) {
-        if (attempt < maxRetries) {
-          await Future.delayed(const Duration(milliseconds: 500));
-        }
+    for (final segment in segments) {
+      if (current.isNotEmpty &&
+          current.length + segment.length > maxChunkBytes) {
+        chunks.add(current);
+        current = <int>[];
       }
+      current.addAll(segment);
     }
-    return false;
+    if (current.isNotEmpty) chunks.add(current);
+
+    final lastIndex = chunks.length - 1;
+    return [
+      for (var i = 0; i <= lastIndex; i++)
+        [
+          if (i > 0) ..._lineSpacingDefault,
+          ...chunks[i],
+          if (i < lastIndex) ..._lineSpacingZero,
+        ],
+    ];
   }
 
-  static Future<List<int>> _buildReceiptBytes(
+  static Future<bool> _writeChunks(List<List<int>> chunks) async {
+    if (!await connectionChecker()) return false;
+
+    for (var i = 0; i < chunks.length; i++) {
+      bool success;
+      try {
+        success = await bytesWriter(
+          chunks[i],
+        ).timeout(_chunkTimeout, onTimeout: () => false);
+      } catch (_) {
+        success = false;
+      }
+
+      if (!success) {
+        debugPrint(
+          '[ThermalPrinter] gagal mengirim chunk ${i + 1}/${chunks.length}',
+        );
+        return false;
+      }
+
+      if (i < chunks.length - 1) await Future.delayed(_chunkInterval);
+    }
+
+    await Future.delayed(_drainDelay);
+    return true;
+  }
+
+  static Future<CapabilityProfile> _getProfile() {
+    return _profileFuture ??= CapabilityProfile.load().catchError((Object e) {
+      _profileFuture = null;
+      throw e;
+    });
+  }
+
+  /// Menyusun struk sebagai daftar segmen. Setiap segmen adalah perintah
+  /// ESC/POS utuh yang berakhir di batas baris, sehingga aman menjadi batas
+  /// chunk. Hanya segmen inisialisasi yang tidak diakhiri baris baru, dan ia
+  /// selalu berada di awal chunk pertama.
+  static Future<List<List<int>>> _buildReceiptSegments(
     CetakSimpananData tx, {
     PaperSize paperSize = PaperSize.mm58,
   }) async {
-    final profile = await CapabilityProfile.load();
+    final profile = await _getProfile();
     final generator = Generator(paperSize, profile);
-    final List<int> bytes = [];
+    final List<List<int>> segments = [];
 
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
@@ -169,36 +276,14 @@ class ThermalPrinterService {
     );
 
     // ── Header ──────────────────────────────────────────
-    bytes.addAll(generator.reset());
-    bytes.addAll(generator.setGlobalFont(PosFontType.fontA));
+    // Reset (ESC @) cukup sekali di awal. Generator melacak style aktif
+    // sehingga align/bold/ukuran dikirim ulang hanya saat berubah.
+    segments.add([
+      ...generator.reset(),
+      ...generator.setGlobalFont(PosFontType.fontA),
+    ]);
 
-    // ── Logo ─────────────────────────────────────────────
-    try {
-      final ByteData logoData = await rootBundle.load(
-        'assets/images/logo_polos.png',
-      );
-      final Uint8List logoRawBytes = logoData.buffer.asUint8List();
-      img.Image? logoImage = img.decodeImage(logoRawBytes);
-      if (logoImage != null) {
-        if (logoImage.numChannels == 4) {
-          final bg = img.Image(
-            width: logoImage.width,
-            height: logoImage.height,
-            numChannels: 3,
-          );
-          img.fill(bg, color: img.ColorRgb8(255, 255, 255));
-          logoImage = img.compositeImage(bg, logoImage);
-        }
-        final resized = img.copyResize(logoImage, width: 150);
-        final grayscale = img.grayscale(resized);
-        bytes.addAll(generator.imageRaster(grayscale, align: PosAlign.center));
-      }
-    } catch (e) {
-      // ignore logo error, lanjut cetak teks
-    }
-    bytes.addAll(generator.reset());
-
-    bytes.addAll(
+    segments.add(
       generator.text(
         'BPR BANGUNARTA',
         styles: PosStyles(
@@ -211,7 +296,7 @@ class ThermalPrinterService {
       ),
     );
 
-    bytes.addAll(
+    segments.add(
       generator.text(
         'Jl. H. Iksan No. 89 Mulyasari, ',
         styles: PosStyles(align: PosAlign.center),
@@ -219,8 +304,7 @@ class ThermalPrinterService {
       ),
     );
 
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.text(
         'Pamanukan',
         styles: PosStyles(align: PosAlign.center),
@@ -228,8 +312,7 @@ class ThermalPrinterService {
       ),
     );
 
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.text(
         'Telepon: (0260) 550500',
         styles: PosStyles(align: PosAlign.center),
@@ -237,8 +320,7 @@ class ThermalPrinterService {
       ),
     );
 
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.text(
         'www.bprbangunarta.co.id',
         styles: PosStyles(align: PosAlign.center),
@@ -246,11 +328,9 @@ class ThermalPrinterService {
       ),
     );
 
-    bytes.addAll(generator.hr(ch: '-'));
+    segments.add(generator.hr(ch: '-'));
 
-    bytes.addAll(generator.reset());
-
-    bytes.addAll(
+    segments.add(
       generator.row([
         PosColumn(
           text: 'Tanggal',
@@ -264,9 +344,8 @@ class ThermalPrinterService {
         ),
       ]),
     );
-    bytes.addAll(generator.reset());
 
-    bytes.addAll(
+    segments.add(
       generator.row([
         PosColumn(
           text: 'No. Referensi',
@@ -281,12 +360,11 @@ class ThermalPrinterService {
       ]),
     );
 
-    bytes.addAll(generator.hr(ch: '-'));
+    segments.add(generator.hr(ch: '-'));
 
     // ── Nama Nasabah & Nomor Rekening ────────────────────
-    bytes.addAll(generator.reset());
 
-    bytes.addAll(
+    segments.add(
       generator.text(
         tx.namaLengkap,
         styles: PosStyles(align: PosAlign.center, bold: true),
@@ -294,9 +372,7 @@ class ThermalPrinterService {
       ),
     );
 
-    bytes.addAll(generator.reset());
-
-    bytes.addAll(
+    segments.add(
       generator.text(
         tx.nomorRekening,
         styles: PosStyles(align: PosAlign.center, bold: true),
@@ -304,11 +380,10 @@ class ThermalPrinterService {
       ),
     );
 
-    bytes.addAll(generator.hr(ch: '-'));
+    segments.add(generator.hr(ch: '-'));
 
     // ── Header Tabel ─────────────────────────────────────
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.row([
         PosColumn(
           text: 'Keterangan',
@@ -323,11 +398,10 @@ class ThermalPrinterService {
       ]),
     );
 
-    bytes.addAll(generator.hr(ch: '-'));
+    segments.add(generator.hr(ch: '-'));
 
     // ── Jumlah Setoran ───────────────────────────────────
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.row([
         PosColumn(
           text: 'Saldo Tabungan',
@@ -342,8 +416,7 @@ class ThermalPrinterService {
       ]),
     );
 
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.row([
         PosColumn(
           text: 'Jumlah Setoran',
@@ -359,8 +432,7 @@ class ThermalPrinterService {
     );
 
     // ── Biaya Admin ──────────────────────────────────────
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.row([
         PosColumn(
           text: 'Biaya Admin',
@@ -375,11 +447,10 @@ class ThermalPrinterService {
       ]),
     );
 
-    bytes.addAll(generator.hr(ch: '-'));
+    segments.add(generator.hr(ch: '-'));
 
     // ── Saldo Akhir ──────────────────────────────────────
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.row([
         PosColumn(
           text: 'Saldo Akhir',
@@ -394,11 +465,10 @@ class ThermalPrinterService {
       ]),
     );
 
-    bytes.addAll(generator.hr(ch: '-'));
+    segments.add(generator.hr(ch: '-'));
 
     // ── Footer ───────────────────────────────────────────
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.text(
         'Apabila terjadi ketidaksesuaian, harap segera menghubungi kami, untuk penyelesaian.',
         styles: PosStyles(align: PosAlign.center),
@@ -406,17 +476,16 @@ class ThermalPrinterService {
       ),
     );
 
-    bytes.addAll(generator.reset());
-    bytes.addAll(
+    segments.add(
       generator.text(
         'Terima kasih atas perhatian Anda.',
         styles: PosStyles(align: PosAlign.center),
         linesAfter: 0,
       ),
     );
-    bytes.addAll(generator.feed(3));
+    segments.add(generator.feed(3));
 
-    return bytes;
+    return segments;
   }
 }
 
